@@ -11,17 +11,160 @@ export default function AdminHRReports() {
   // Date filtering state
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [datePreset, setDatePreset] = useState("");
+
+  const handleQuickFilter = (preset) => {
+    setDatePreset(preset);
+    if (!preset) {
+      setFromDate("");
+      setToDate("");
+      return;
+    }
+    const today = new Date();
+    let start = "";
+    let end = "";
+    
+    const formatDateStr = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    switch (preset) {
+      case "today": {
+        start = formatDateStr(today);
+        end = formatDateStr(today);
+        break;
+      }
+      case "yesterday": {
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        start = formatDateStr(yesterday);
+        end = formatDateStr(yesterday);
+        break;
+      }
+      case "this_week": {
+        const first = today.getDate() - today.getDay();
+        const firstDay = new Date(today.setDate(first));
+        const lastDay = new Date(today.setDate(first + 6));
+        start = formatDateStr(firstDay);
+        end = formatDateStr(lastDay);
+        break;
+      }
+      case "last_7_days": {
+        const past = new Date();
+        past.setDate(today.getDate() - 6);
+        start = formatDateStr(past);
+        end = formatDateStr(new Date());
+        break;
+      }
+      case "this_month": {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        start = formatDateStr(firstDay);
+        end = formatDateStr(lastDay);
+        break;
+      }
+      case "last_month": {
+        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+        start = formatDateStr(firstDay);
+        end = formatDateStr(lastDay);
+        break;
+      }
+      case "this_year": {
+        start = `${today.getFullYear()}-01-01`;
+        end = `${today.getFullYear()}-12-31`;
+        break;
+      }
+      // Specific months in current year
+      case "january":
+      case "february":
+      case "march":
+      case "april":
+      case "may":
+      case "june":
+      case "july":
+      case "august":
+      case "september":
+      case "october":
+      case "november":
+      case "december": {
+        const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+        const monthIndex = months.indexOf(preset);
+        const firstDay = new Date(today.getFullYear(), monthIndex, 1);
+        const lastDay = new Date(today.getFullYear(), monthIndex + 1, 0);
+        start = formatDateStr(firstDay);
+        end = formatDateStr(lastDay);
+        break;
+      }
+      default:
+        start = "";
+        end = "";
+        break;
+    }
+    setFromDate(start);
+    setToDate(end);
+  };
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const candidates = await jobService.getDatabaseCandidates();
-        const shortlisted = await jobService.getShortlistedCandidates();
-        const { data: logsData } = await supabase.from('communication_logs').select('hr_name, created_at');
         const admins = await jobService.fetchAllAdmins();
-        
-        setRawData({ candidates: candidates || [], shortlisted: shortlisted || [], logs: logsData || [], admins: admins || [] });
+
+        // 1. Refresh aggregates (runs instantly on database server)
+        await supabase.rpc('refresh_dashboard_aggregates');
+
+        // 2. Fetch pre-aggregated daily stats
+        const { data: statsData, error: statsError } = await supabase
+          .from('dashboard_hr_daily_stats')
+          .select('stat_date, hr_name, uploaded_count, tagged_count, calls_count');
+
+        if (statsError) throw statsError;
+
+        // 3. Map statsData to rawData candidates, shortlisted, and logs
+        const candidates = [];
+        const shortlisted = [];
+        const logs = [];
+
+        (statsData || []).forEach(row => {
+          const dateStr = row.stat_date; // YYYY-MM-DD
+          const hrName = row.hr_name;
+
+          // For resumes sourced
+          if (row.uploaded_count > 0) {
+            for (let i = 0; i < row.uploaded_count; i++) {
+              candidates.push({
+                uploadedBy: hrName,
+                createdOn: dateStr
+              });
+            }
+          }
+
+          // For shortlisted
+          if (row.tagged_count > 0) {
+            for (let i = 0; i < row.tagged_count; i++) {
+              shortlisted.push({
+                shortlistedBy: hrName,
+                shortlistedOn: dateStr
+              });
+            }
+          }
+
+          // For calls
+          if (row.calls_count > 0) {
+            for (let i = 0; i < row.calls_count; i++) {
+              logs.push({
+                hr_name: hrName,
+                created_at: dateStr
+              });
+            }
+          }
+        });
+
+        setRawData({ candidates, shortlisted, logs, admins: admins || [] });
       } catch (e) {
         console.error("Failed to load HR reports data", e);
       }
@@ -57,7 +200,7 @@ export default function AdminHRReports() {
 
     rawData.shortlisted.forEach(s => {
       if (s.shortlistedBy) {
-        let taggedTs = s.timestamp ? new Date(s.timestamp).getTime() : s.createdOn ? new Date(s.createdOn).getTime() : Date.now();
+        let taggedTs = s.shortlistedOn ? new Date(s.shortlistedOn).getTime() : s.timestamp ? new Date(s.timestamp).getTime() : s.createdOn ? new Date(s.createdOn).getTime() : Date.now();
         if (taggedTs >= fromTs && taggedTs <= toTs) {
           if (!statsMap[s.shortlistedBy]) statsMap[s.shortlistedBy] = { name: s.shortlistedBy, uploaded: 0, shortlisted: 0, callsLogged: 0 };
           statsMap[s.shortlistedBy].shortlisted += 1;
@@ -95,7 +238,7 @@ export default function AdminHRReports() {
   };
 
   const s = {
-    page: { padding: "32px 40px", maxWidth: "100%", margin: "0 auto", fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" },
+    page: { padding: "32px 24px 32px 0px", maxWidth: "100%", margin: "0 auto", fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", flexWrap: "wrap", gap: "12px" },
     title: { fontSize: "24px", fontWeight: 800, color: "#1e293b", margin: 0, display: 'flex', alignItems: 'center', gap: '10px' },
     subtitle: { fontSize: "14px", color: "#64748b", margin: "6px 0 0" },
@@ -124,9 +267,37 @@ export default function AdminHRReports() {
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px 12px' }}>
             <FiFilter color="#64748b" />
-            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: '13px', color: '#334155', background: 'transparent' }} />
+            <select
+              value={datePreset}
+              onChange={e => handleQuickFilter(e.target.value)}
+              style={{ border: 'none', outline: 'none', fontSize: '13px', color: '#334155', background: 'transparent', marginRight: '8px', cursor: 'pointer', fontWeight: 600 }}
+            >
+              <option value="">Custom Range</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="last_7_days">Last 7 Days</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="this_year">This Year</option>
+              <optgroup label="Select Month">
+                <option value="january">January</option>
+                <option value="february">February</option>
+                <option value="march">March</option>
+                <option value="april">April</option>
+                <option value="may">May</option>
+                <option value="june">June</option>
+                <option value="july">July</option>
+                <option value="august">August</option>
+                <option value="september">September</option>
+                <option value="october">October</option>
+                <option value="november">November</option>
+                <option value="december">December</option>
+              </optgroup>
+            </select>
+            <input type="date" value={fromDate} onChange={e => { setFromDate(e.target.value); setDatePreset(""); }} style={{ border: 'none', outline: 'none', fontSize: '13px', color: '#334155', background: 'transparent' }} />
             <span style={{ color: '#cbd5e1' }}>→</span>
-            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: '13px', color: '#334155', background: 'transparent' }} />
+            <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); setDatePreset(""); }} style={{ border: 'none', outline: 'none', fontSize: '13px', color: '#334155', background: 'transparent' }} />
           </div>
           <button 
             onClick={handleExport}
@@ -138,8 +309,10 @@ export default function AdminHRReports() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px', color: '#94a3b8' }}>
-          <FiLoader size={28} style={{ animation: 'spin 1s linear infinite' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 20px', color: '#94a3b8' }}>
+          <FiLoader size={36} style={{ animation: 'spin 1.5s linear infinite', marginBottom: '16px', color: '#0B2F5B' }} />
+          <div style={{ fontSize: '15px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>Loading Report Data...</div>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>Please wait while the HR breakdown is compiled.</div>
         </div>
       ) : (
         <>

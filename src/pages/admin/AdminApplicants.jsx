@@ -103,9 +103,22 @@ function StatusBadge({ status }) {
 export default function AdminApplicants() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
+  const [admins, setAdmins] = useState([]);
+
+  useEffect(() => {
+    jobService.fetchAllAdmins().then(res => {
+      if (res && Array.isArray(res)) {
+        setAdmins(res);
+      }
+    });
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    const saved = sessionStorage.getItem('ciedeck_filter_page');
+    return saved ? parseInt(saved, 10) : 1;
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [totalCount, setTotalCount] = useState(null);
   const [totalLoading, setTotalLoading] = useState(false);
@@ -113,18 +126,44 @@ export default function AdminApplicants() {
   const previousTextFilterKey = useRef(null);
   const hasMountedFetch = useRef(false);
 
-  const [search, setSearch] = useState('');
-  const [searchHr, setSearchHr] = useState('');
-  const [searchDate, setSearchDate] = useState('');
-  const [filterSource, setFilterSource] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [filterAI, setFilterAI] = useState('');
-  const [filterExp, setFilterExp] = useState('');
-  const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo, setFilterDateTo] = useState('');
-  const [filterJobTitle, setFilterJobTitle] = useState('');
-  const [filterSkills, setFilterSkills] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'createdOn', direction: 'desc' });
+  const [search, setSearch] = useState(() => sessionStorage.getItem('ciedeck_filter_search') || '');
+  const [searchHr, setSearchHr] = useState(() => sessionStorage.getItem('ciedeck_filter_searchHr') || '');
+  const [searchDate, setSearchDate] = useState(() => sessionStorage.getItem('ciedeck_filter_searchDate') || '');
+  const [filterSource, setFilterSource] = useState(() => sessionStorage.getItem('ciedeck_filter_filterSource') || '');
+  const [filterStatus, setFilterStatus] = useState(() => sessionStorage.getItem('ciedeck_filter_filterStatus') || '');
+  const [filterAI, setFilterAI] = useState(() => sessionStorage.getItem('ciedeck_filter_filterAI') || '');
+  const [filterExp, setFilterExp] = useState(() => sessionStorage.getItem('ciedeck_filter_filterExp') || '');
+  const [filterDateFrom, setFilterDateFrom] = useState(() => sessionStorage.getItem('ciedeck_filter_filterDateFrom') || '');
+  const [filterDateTo, setFilterDateTo] = useState(() => sessionStorage.getItem('ciedeck_filter_filterDateTo') || '');
+  const [filterJobTitle, setFilterJobTitle] = useState(() => sessionStorage.getItem('ciedeck_filter_filterJobTitle') || '');
+  const [filterSkills, setFilterSkills] = useState(() => sessionStorage.getItem('ciedeck_filter_filterSkills') || '');
+  const [sortConfig, setSortConfig] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('ciedeck_filter_sortConfig');
+      return saved ? JSON.parse(saved) : { key: 'createdOn', direction: 'desc' };
+    } catch {
+      return { key: 'createdOn', direction: 'desc' };
+    }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('ciedeck_filter_page', page.toString());
+    sessionStorage.setItem('ciedeck_filter_search', search);
+    sessionStorage.setItem('ciedeck_filter_searchHr', searchHr);
+    sessionStorage.setItem('ciedeck_filter_searchDate', searchDate);
+    sessionStorage.setItem('ciedeck_filter_filterSource', filterSource);
+    sessionStorage.setItem('ciedeck_filter_filterStatus', filterStatus);
+    sessionStorage.setItem('ciedeck_filter_filterAI', filterAI);
+    sessionStorage.setItem('ciedeck_filter_filterExp', filterExp);
+    sessionStorage.setItem('ciedeck_filter_filterDateFrom', filterDateFrom);
+    sessionStorage.setItem('ciedeck_filter_filterDateTo', filterDateTo);
+    sessionStorage.setItem('ciedeck_filter_filterJobTitle', filterJobTitle);
+    sessionStorage.setItem('ciedeck_filter_filterSkills', filterSkills);
+    sessionStorage.setItem('ciedeck_filter_sortConfig', JSON.stringify(sortConfig));
+  }, [
+    page, search, searchHr, searchDate, filterSource, filterStatus, filterAI,
+    filterExp, filterDateFrom, filterDateTo, filterJobTitle, filterSkills, sortConfig
+  ]);
 
   const hasActiveFilters = Boolean(
     search || searchHr || searchDate || filterSource || filterStatus || filterAI ||
@@ -296,6 +335,21 @@ export default function AdminApplicants() {
           }}>
             <FiFilter size={13} /> Filters
           </button>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} style={{
+              display: 'flex', alignItems: 'center', gap: '7px',
+              padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
+              border: `1px solid #dc2626`,
+              background: '#fef2f2',
+              color: '#dc2626', cursor: 'pointer',
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
+            >
+              <FiX size={13} /> Clean Filters
+            </button>
+          )}
           <button onClick={() => fetchData(page)} disabled={loading} style={{
             display: 'flex', alignItems: 'center', gap: '7px',
             padding: '9px 16px', border: '1px solid #e2e8f0', borderRadius: '10px',
@@ -327,15 +381,19 @@ export default function AdminApplicants() {
 
         <div style={{ position: 'relative', flex: '1 1 200px' }}>
           <FiUser size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-          <input
-            placeholder="Added by HR..."
+          <select
             value={searchHr}
             onChange={(e) => {
               setSearchHr(e.target.value);
               setPage(1);
             }}
-            style={{ ...inputStyle, paddingLeft: '40px', paddingRight: searchHr ? '36px' : '14px', fontSize: '13px', padding: '11px 12px 11px 40px' }}
-          />
+            style={{ ...inputStyle, paddingLeft: '40px', paddingRight: searchHr ? '36px' : '14px', fontSize: '13px', padding: '11px 12px 11px 40px', cursor: 'pointer', appearance: 'none' }}
+          >
+            <option value="">Added by HR...</option>
+            {admins.map((admin, idx) => (
+              <option key={idx} value={admin.hr_name}>{admin.hr_name}</option>
+            ))}
+          </select>
           {searchHr && (
             <button onClick={() => { setSearchHr(''); setPage(1); }} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}>
               <FiX size={14} />

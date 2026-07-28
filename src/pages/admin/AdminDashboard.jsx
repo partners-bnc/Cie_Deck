@@ -102,12 +102,12 @@ export default function AdminDashboard() {
   if (loadingSummary && !summary) {
     return (
       <div style={{ padding: "32px", maxWidth: "1250px" }}>
-        <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
+          <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "10px" }}>
             <span role="img" aria-label="wave">{"\u{1F44B}"}</span>
             <span>Welcome back, {adminId}</span>
           </h1>
-          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>{today}</p>
+          <p style={{ margin: 0, color: "#6b7280", fontSize: "14px", fontWeight: 500 }}>{today}</p>
         </div>
         <AdminDashboardSkeleton />
       </div>
@@ -116,12 +116,12 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ padding: "32px", maxWidth: "1250px" }}>
-      <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
+        <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 700, color: "#111827", display: "flex", alignItems: "center", gap: "10px" }}>
           <span role="img" aria-label="wave">{"\u{1F44B}"}</span>
           <span>Welcome back, {adminId}</span>
         </h1>
-        <p style={{ margin: 0, color: "#6b7280", fontSize: "14px" }}>{today}</p>
+        <p style={{ margin: 0, color: "#6b7280", fontSize: "14px", fontWeight: 500 }}>{today}</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px" }}>

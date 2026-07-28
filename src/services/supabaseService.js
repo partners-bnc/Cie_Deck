@@ -229,7 +229,7 @@ function applyApplicantFilters(query, options = {}) {
   } = options;
 
   const globalSearch = buildIlikeOrFilter(
-    ['full_name', 'email', 'mobile_number', 'skills', 'current_position', 'job_applied_for', 'current_company'],
+    ['full_name', 'email', 'mobile_number', 'skills', 'current_position', 'job_applied_for', 'current_company', 'applicant_code', 'uploaded_by'],
     search
   );
   if (globalSearch) query = query.or(globalSearch);
@@ -1946,6 +1946,88 @@ export const jobService = {
       return { success: true };
     } catch (error) {
       return { error: error.toString() };
+    }
+  },
+
+  async getHRReportCandidates() {
+    try {
+      const rows = [];
+      let from = 0;
+      while (true) {
+        const to = from + SUPABASE_PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from('applicants')
+          .select('uploaded_by, created_on')
+          .range(from, to);
+
+        if (error) throw error;
+        if (!data?.length) break;
+
+        rows.push(...data);
+        if (data.length < SUPABASE_PAGE_SIZE) break;
+        from += SUPABASE_PAGE_SIZE;
+      }
+      return rows.map(r => ({
+        uploadedBy: r.uploaded_by || '',
+        createdOn: r.created_on || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching HR report candidates:', error);
+      return [];
+    }
+  },
+
+  async getHRReportShortlisted() {
+    try {
+      const rows = [];
+      let from = 0;
+      while (true) {
+        const to = from + SUPABASE_PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from('tagged_candidates')
+          .select('shortlisted_by, created_at')
+          .range(from, to);
+
+        if (error) throw error;
+        if (!data?.length) break;
+
+        rows.push(...data);
+        if (data.length < SUPABASE_PAGE_SIZE) break;
+        from += SUPABASE_PAGE_SIZE;
+      }
+      return rows.map(r => ({
+        shortlistedBy: r.shortlisted_by || '',
+        shortlistedOn: r.created_at || '',
+        createdOn: r.created_at || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching HR report shortlisted:', error);
+      return [];
+    }
+  },
+
+  async getHRReportLogs() {
+    try {
+      const rows = [];
+      let from = 0;
+      while (true) {
+        const to = from + SUPABASE_PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from('communication_logs')
+          .select('hr_name, created_at')
+          .range(from, to);
+
+        if (error) throw error;
+        if (!data?.length) break;
+
+        rows.push(...data);
+        if (data.length < SUPABASE_PAGE_SIZE) break;
+        from += SUPABASE_PAGE_SIZE;
+      }
+      return rows;
+    } catch (error) {
+      console.error('Error fetching HR report logs:', error);
+      return [];
     }
   },
 };
