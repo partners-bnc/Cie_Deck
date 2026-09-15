@@ -17,8 +17,18 @@ create table if not exists public.dashboard_source_stats (
   updated_at timestamp with time zone not null default now()
 );
 
+create table if not exists public.dashboard_hr_source_daily_stats (
+  stat_date date not null,
+  hr_name text not null,
+  source text not null,
+  uploaded_count integer not null default 0,
+  updated_at timestamp with time zone not null default now(),
+  primary key (stat_date, hr_name, source)
+);
+
 alter table public.dashboard_hr_daily_stats enable row level security;
 alter table public.dashboard_source_stats enable row level security;
+alter table public.dashboard_hr_source_daily_stats enable row level security;
 
 drop policy if exists dashboard_hr_daily_stats_admin_read on public.dashboard_hr_daily_stats;
 create policy dashboard_hr_daily_stats_admin_read
@@ -30,6 +40,13 @@ create policy dashboard_hr_daily_stats_admin_read
 drop policy if exists dashboard_source_stats_admin_read on public.dashboard_source_stats;
 create policy dashboard_source_stats_admin_read
   on public.dashboard_source_stats
+  for select
+  to authenticated
+  using (is_admin());
+
+drop policy if exists dashboard_hr_source_daily_stats_admin_read on public.dashboard_hr_source_daily_stats;
+create policy dashboard_hr_source_daily_stats_admin_read
+  on public.dashboard_hr_source_daily_stats
   for select
   to authenticated
   using (is_admin());
@@ -131,6 +148,7 @@ as $$
 begin
   truncate table public.dashboard_hr_daily_stats;
   truncate table public.dashboard_source_stats;
+  truncate table public.dashboard_hr_source_daily_stats;
 
   insert into public.dashboard_source_stats (source, candidate_count, updated_at)
   select public.dashboard_label(source, 'Portal / Unknown'),
@@ -138,6 +156,16 @@ begin
          now()
   from public.applicants
   group by public.dashboard_label(source, 'Portal / Unknown');
+
+  insert into public.dashboard_hr_source_daily_stats (stat_date, hr_name, source, uploaded_count, updated_at)
+  select created_on::date as stat_date,
+         public.dashboard_label(uploaded_by, 'Portal / Unknown') as hr_name,
+         public.dashboard_label(source, 'Others') as source,
+         count(*)::integer as uploaded_count,
+         now()
+  from public.applicants
+  where created_on is not null
+  group by created_on::date, public.dashboard_label(uploaded_by, 'Portal / Unknown'), public.dashboard_label(source, 'Others');
 
   insert into public.dashboard_hr_daily_stats (stat_date, hr_name, uploaded_count, tagged_count, calls_count, updated_at)
   with uploaded as (

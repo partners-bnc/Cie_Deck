@@ -19,10 +19,37 @@ import {
 
 const PAGE_SIZE = 100;
 
-const SOURCE_OPTIONS = ['Job Application', 'HR Upload', 'LinkedIn', 'Naukri', 'Referral', 'Walk-in'];
+const SOURCE_OPTIONS = [
+  'BNC Indeed',
+  'BNC Linkedin',
+  'BNC IIM',
+  'BNC Job Hai',
+  'BNC Others',
+  'Linkedin',
+  'Indeed',
+  'IIM',
+  'Others',
+  'Ciedeck',
+  'Job Application',
+  'HR Upload',
+  'LinkedIn',
+  'Naukri',
+  'Referral',
+  'Walk-in'
+];
 const STATUS_OPTIONS = ['Applied', 'In Database', 'Tagged', 'Rejected', 'Hired'];
 
 const SOURCE_COLORS = {
+  'BNC Indeed': { bg: '#e0f2fe', color: '#0369a1', border: '#bae6fd' },
+  'BNC Linkedin': { bg: '#e0e7ff', color: '#3730a3', border: '#c7d2fe' },
+  'BNC IIM': { bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
+  'BNC Job Hai': { bg: '#fce7f3', color: '#9d174d', border: '#fbcfe8' },
+  'BNC Others': { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' },
+  Linkedin: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
+  Indeed: { bg: '#e0f2fe', color: '#0369a1', border: '#bae6fd' },
+  IIM: { bg: '#fef3c7', color: '#92400e', border: '#fde68a' },
+  Others: { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' },
+  Ciedeck: { bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
   'Job Application': { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
   'HR Upload': { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
   LinkedIn: { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },

@@ -41,7 +41,26 @@ const TABS = [
 ];
 
 const STATUS_OPTIONS = ['Applied', 'In Database', 'Tagged', 'Rejected', 'Interview Scheduled', 'Hired', 'On Hold'];
-const SOURCE_OPTIONS = ['Job Application', 'HR Upload', 'LinkedIn', 'Naukri', 'Indeed', 'Referral', 'Walk-in', 'Company Website', 'Other'];
+const SOURCE_OPTIONS = [
+  'BNC Indeed',
+  'BNC Linkedin',
+  'BNC IIM',
+  'BNC Job Hai',
+  'BNC Others',
+  'Linkedin',
+  'Indeed',
+  'IIM',
+  'Others',
+  'Ciedeck',
+  'Job Application',
+  'HR Upload',
+  'LinkedIn',
+  'Naukri',
+  'Referral',
+  'Walk-in',
+  'Company Website',
+  'Other'
+];
 const EXP_OPTIONS = ['0', '1', '2', '3', '4', '5', '6-10', '10+'];
 const NOTICE_OPTIONS = ['Immediate', '15 Days', '1 Month', '2 Months', '3 Months'];
 const WORK_AUTH_OPTIONS = ['Citizen', 'Permanent Resident', 'Work Visa', 'Student Visa', 'Requires Sponsorship', 'Not Authorized', 'Other'];

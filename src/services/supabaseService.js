@@ -1957,7 +1957,7 @@ export const jobService = {
         const to = from + SUPABASE_PAGE_SIZE - 1;
         const { data, error } = await supabase
           .from('applicants')
-          .select('uploaded_by, created_on')
+          .select('uploaded_by, created_on, source')
           .range(from, to);
 
         if (error) throw error;
@@ -1969,7 +1969,8 @@ export const jobService = {
       }
       return rows.map(r => ({
         uploadedBy: r.uploaded_by || '',
-        createdOn: r.created_on || ''
+        createdOn: r.created_on || '',
+        source: r.source || 'Others'
       }));
     } catch (error) {
       console.error('Error fetching HR report candidates:', error);

@@ -9,8 +9,22 @@ import {
 } from 'react-icons/fi';
 
 
-// ── Helpers ──
-const SOURCE_OPTIONS = ['LinkedIn', 'Naukri', 'Indeed', 'Referral', 'Walk-in', 'Company Website', 'Other'];
+const SOURCE_OPTIONS = [
+  'BNC Indeed',
+  'BNC Linkedin',
+  'BNC IIM',
+  'BNC Job Hai',
+  'BNC Others',
+  'Linkedin',
+  'Indeed',
+  'IIM',
+  'Others',
+  'Ciedeck',
+  'Naukri',
+  'Referral',
+  'Walk-in',
+  'Company Website'
+];
 const BULK_PARSE_DELAY_MS = 3000;
 const MAX_BULK_AUTO_RETRY_ROUNDS = 3;
 const RETRYABLE_ERROR_PATTERNS = [
