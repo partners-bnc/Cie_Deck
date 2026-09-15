@@ -1,5 +1,5 @@
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.1-8b-instant';
+const GROQ_MODEL = 'qwen/qwen3.8-27b';
 const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
 const MAX_KEY_ATTEMPTS = 6;
 
@@ -37,11 +37,19 @@ IMPORTANT RULES:
 }
 
 function getConfiguredKeys() {
-  return [
+  const candidates = [
+    process.env.GROQ_API_KEY,
     process.env.GROQ_API_KEY_1,
     process.env.GROQ_API_KEY_2,
     process.env.GROQ_API_KEY_3,
-  ].map((key) => key?.trim()).filter(Boolean);
+    process.env.VITE_GROQ_API_KEY,
+    process.env.VITE_GROQ_API_KEY_1,
+    process.env.VITE_GROQ_API_KEY_2,
+    process.env.VITE_GROQ_API_KEY_3,
+  ];
+  return candidates
+    .map((key) => key?.trim())
+    .filter((key, idx, arr) => Boolean(key) && arr.indexOf(key) === idx);
 }
 
 function sleep(ms) {

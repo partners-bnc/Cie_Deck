@@ -47,3 +47,5 @@ Dockerfile.resume-enqueue-launcher
 Dockerfile.resume-queue-worker
 
 scripts/
+.vercel
+.env*

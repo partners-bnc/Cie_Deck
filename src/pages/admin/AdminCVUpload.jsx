@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { jobService } from '../../services/jobService.js';
-import { parseResumeForDatabase, parseResumeForDatabaseWithRotation } from '../../services/resumeParser.js';
+import { parseResumeForDatabase, parseResumeForDatabaseWithRotation, getGroqKeyCount } from '../../services/resumeParser.js';
 import {
   FiUpload, FiFile, FiX, FiCheck, FiZap, FiLoader, FiUser,
   FiPhone, FiMail, FiMapPin, FiBriefcase, FiBookOpen, FiTag,
@@ -455,15 +455,14 @@ function BulkUpload({ adminName }) {
     const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     const valid = Array.from(fileList).filter(f => allowed.includes(f.type) && f.size <= 5 * 1024 * 1024);
     if (valid.length < fileList.length) setError(`${fileList.length - valid.length} file(s) skipped (invalid type or >5MB).`);
-    else setError('');
-
+    const totalKeySlots = getGroqKeyCount();
     const nextResults = valid.map((f, index) => ({
       name: f.name,
       status: STATUS.WAITING,
       id: null,
       error: null,
       attempts: 0,
-      keySlot: (index % 3) + 1,
+      keySlot: (index % totalKeySlots) + 1,
     }));
 
     setFiles(valid);
@@ -500,14 +499,16 @@ function BulkUpload({ adminName }) {
   });
 
   const processSingleFile = async (file, index, attempt = 1) => {
+    const totalKeySlots = getGroqKeyCount();
+    const rotationIndex = index + (attempt - 1);
     updateResult(index, {
       status: attempt > 1 ? STATUS.RETRYING : STATUS.PARSING,
       error: null,
       attempts: attempt,
-      keySlot: (index % 3) + 1,
+      keySlot: (rotationIndex % totalKeySlots) + 1,
     });
 
-    const parsed = await parseResumeForDatabaseWithRotation(file, index, () => {});
+    const parsed = await parseResumeForDatabaseWithRotation(file, rotationIndex, () => {});
 
     updateResult(index, {
       status: STATUS.SAVING,
@@ -551,11 +552,13 @@ function BulkUpload({ adminName }) {
         if (!window._isBulkProcessing) break;
         await processSingleFile(file, index, attempt);
       } catch (e) {
+        const totalKeySlots = getGroqKeyCount();
+        const rotationIndex = index + (attempt - 1);
         updateResult(index, {
           status: STATUS.FAILED,
           error: e.message,
           attempts: attempt,
-          keySlot: (index % 3) + 1,
+          keySlot: (rotationIndex % totalKeySlots) + 1,
         });
       }
     }

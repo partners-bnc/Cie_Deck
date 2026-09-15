@@ -110,15 +110,24 @@ async function fileToBase64(file) {
 const GEMINI_API_KEY =
   (typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY) ||
   import.meta.env.VITE_GEMINI_API_KEY;
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const GROQ_MODEL = 'qwen/qwen3.8-27b';
 const GROQ_API_KEYS = [
+  import.meta.env.VITE_GROQ_API_KEY,
   import.meta.env.VITE_GROQ_API_KEY_1,
   import.meta.env.VITE_GROQ_API_KEY_2,
   import.meta.env.VITE_GROQ_API_KEY_3,
-].map((key) => key?.trim()).filter(Boolean);
+].map((key) => key?.trim()).filter((key, idx, arr) => Boolean(key) && arr.indexOf(key) === idx);
 const NORMALIZED_GEMINI_API_KEY = GEMINI_API_KEY?.trim();
-const NORMALIZED_GROQ_API_KEY = GROQ_API_KEY?.trim();
+const NORMALIZED_GROQ_API_KEY = (GROQ_API_KEYS[0] || import.meta.env.VITE_GROQ_API_KEY)?.trim();
 const VALID_EXPERIENCE_VALUES = ['0', '1', '2', '3', '4', '5', '6-10', '10+'];
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function getGroqKeyCount() {
+  return Math.max(GROQ_API_KEYS.length, 1);
+}
 
 function getResumePrompt(resumeText, extended = false) {
   const extraFields = extended ? `,
@@ -167,99 +176,59 @@ async function fetchWithRetry(url, options, maxRetries = 1) {
   }
 }
 
-async function extractFieldsWithAI(resumeText, extended = false, file = null) {
+async function extractFieldsWithGemini(resumeText, extended = false, file = null) {
+  if (!NORMALIZED_GEMINI_API_KEY || NORMALIZED_GEMINI_API_KEY.length <= 10) {
+    throw new Error('Gemini API key is not configured.');
+  }
+
   const prompt = getResumePrompt(resumeText, extended);
-  let geminiFailure = null;
+  const parts = [];
 
-  if (NORMALIZED_GEMINI_API_KEY && NORMALIZED_GEMINI_API_KEY.length > 10) {
-    try {
-      const parts = [];
+  if (
+    file &&
+    (file.type === 'application/pdf' || file.type.startsWith('image/'))
+  ) {
+    parts.push({
+      inline_data: {
+        mime_type: file.type,
+        data: await fileToBase64(file),
+      },
+    });
+  }
 
-      if (
-        file &&
-        (file.type === 'application/pdf' || file.type.startsWith('image/'))
-      ) {
-        parts.push({
-          inline_data: {
-            mime_type: file.type,
-            data: await fileToBase64(file),
-          },
-        });
-      }
+  parts.push({ text: prompt });
 
-      parts.push({ text: prompt });
-
-      const response = await fetchWithRetry(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': NORMALIZED_GEMINI_API_KEY,
-          },
-          body: JSON.stringify({
-            contents: [{ parts }],
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: 'application/json',
-            },
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!content) throw new Error('Empty response from Gemini');
-        return JSON.parse(content);
-      }
-
-      const apiMessage =
-        data?.error?.message ||
-        data?.promptFeedback?.blockReason ||
-        `Gemini API error: ${response.status}`;
-      geminiFailure = new Error(apiMessage);
-      console.warn('Gemini failed, falling back to Groq...', geminiFailure);
-    } catch (err) {
-      geminiFailure = err instanceof Error ? err : new Error(String(err));
-      console.error('Gemini error:', err);
+  const response = await fetchWithRetry(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': NORMALIZED_GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: 'application/json',
+        },
+      }),
     }
-  }
-
-  if (!NORMALIZED_GROQ_API_KEY) {
-    if (geminiFailure) {
-      throw geminiFailure;
-    }
-    throw new Error('No AI API keys configured. Set VITE_GEMINI_API_KEY or VITE_GROQ_API_KEY.');
-  }
-
-  const response = await fetchWithRetry('/api/groq/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${NORMALIZED_GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
-      messages: [
-        { role: 'system', content: 'You are a precise resume parser. Return only JSON.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Groq API error: ${response.status} ${errorBody.substring(0, 50)}`);
-  }
+  );
 
   const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty response from AI');
-  return JSON.parse(content);
+
+  if (response.ok) {
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) throw new Error('Empty response from Gemini');
+    return JSON.parse(content);
+  }
+
+  const apiMessage =
+    data?.error?.message ||
+    data?.promptFeedback?.blockReason ||
+    `Gemini API error: ${response.status}`;
+  throw new Error(apiMessage);
 }
 
 async function extractFieldsWithAdminGroq(resumeText, extended = true, rotationIndex = 0) {
@@ -289,11 +258,11 @@ async function extractFieldsWithAdminGroq(resumeText, extended = true, rotationI
 
 async function extractFieldsWithClientGroqRotation(resumeText, extended = true, rotationIndex = 0) {
   if (!GROQ_API_KEYS.length) {
-    throw new Error('No local Groq rotation keys configured. Add VITE_GROQ_API_KEY_1, VITE_GROQ_API_KEY_2, and VITE_GROQ_API_KEY_3 to .env.');
+    throw new Error('No local Groq rotation keys configured. Add VITE_GROQ_API_KEY, VITE_GROQ_API_KEY_1, or VITE_GROQ_API_KEY_2 to .env.');
   }
 
   const prompt = getResumePrompt(resumeText, extended);
-  const maxAttempts = Math.max(GROQ_API_KEYS.length, 6);
+  const maxAttempts = Math.max(GROQ_API_KEYS.length * 2, 6);
   const normalizedStart = ((rotationIndex % GROQ_API_KEYS.length) + GROQ_API_KEYS.length) % GROQ_API_KEYS.length;
   let lastError = null;
 
@@ -308,7 +277,7 @@ async function extractFieldsWithClientGroqRotation(resumeText, extended = true, 
         Authorization: `Bearer ${currentKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: GROQ_MODEL,
         messages: [
           { role: 'system', content: 'You are a precise resume parser. Return only JSON.' },
           { role: 'user', content: prompt },
@@ -340,7 +309,7 @@ async function extractFieldsWithClientGroqRotation(resumeText, extended = true, 
       break;
     }
 
-    await sleep(1000);
+    await sleep(1500);
   }
 
   throw lastError || new Error('Groq parsing failed');
@@ -350,16 +319,51 @@ async function extractFieldsWithAdminFallback(resumeText, extended = true, rotat
   try {
     return await extractFieldsWithAdminGroq(resumeText, extended, rotationIndex);
   } catch (error) {
-    const isMissingLocalRoute =
-      import.meta.env.DEV &&
-      (String(error?.message || '').includes('404') || String(error?.message || '').includes('Failed to fetch'));
-
-    if (!isMissingLocalRoute) {
-      throw error;
+    if (GROQ_API_KEYS.length > 0) {
+      return extractFieldsWithClientGroqRotation(resumeText, extended, rotationIndex);
     }
-
-    return extractFieldsWithClientGroqRotation(resumeText, extended, rotationIndex);
+    throw error;
   }
+}
+
+async function parseFieldsWithPrimaryGroq(resumeText, extended = false, rotationIndex = 0, file = null) {
+  let groqFailure = null;
+  const hasText = Boolean(resumeText && resumeText.trim().length >= 20);
+
+  // 1. Primary: If readable text was extracted, attempt Groq with rotation first
+  if (hasText) {
+    try {
+      const groqRes = await extractFieldsWithAdminFallback(resumeText, extended, rotationIndex);
+      if (groqRes?.parsed && Object.keys(groqRes.parsed).length > 0) {
+        return groqRes.parsed;
+      }
+    } catch (err) {
+      console.warn('Primary Groq parsing failed, attempting Gemini fallback...', err);
+      groqFailure = err;
+    }
+  }
+
+  // 2. Fallback to Gemini (supports scanned/image PDFs or Groq failover)
+  const canUseGemini = Boolean(NORMALIZED_GEMINI_API_KEY && NORMALIZED_GEMINI_API_KEY.length > 10);
+  if (canUseGemini && (file || hasText)) {
+    try {
+      return await extractFieldsWithGemini(resumeText || '', extended, file);
+    } catch (geminiErr) {
+      console.error('Gemini fallback failed:', geminiErr);
+      if (groqFailure) throw groqFailure;
+      throw geminiErr;
+    }
+  }
+
+  if (groqFailure) {
+    throw groqFailure;
+  }
+
+  if (!hasText) {
+    throw new Error('Could not extract readable text from this resume. The PDF may be image-based or corrupted.');
+  }
+
+  throw new Error('No AI API keys configured for resume parsing.');
 }
 
 function normalizeParsedFields(extracted, extended = false) {
@@ -427,20 +431,10 @@ export async function parseResume(file, onProgress) {
   try {
     if (onProgress) onProgress('extracting');
     const text = await extractText(file);
-    const geminiEnabled = canUseGeminiDocumentInput(file);
-
-    if ((!text || text.trim().length < 20) && !geminiEnabled) {
-      console.warn('Not enough text extracted from resume');
-      return result;
-    }
 
     if (onProgress) onProgress('contact');
 
-    const extracted = geminiEnabled
-      ? await extractFieldsWithAI(text, false, file)
-      : NORMALIZED_GROQ_API_KEY
-        ? await extractFieldsWithAI(text, false, file)
-        : (await extractFieldsWithAdminFallback(text, false)).parsed;
+    const extracted = await parseFieldsWithPrimaryGroq(text, false, 0, file);
 
     if (onProgress) onProgress('education');
 
@@ -485,17 +479,10 @@ export async function parseResume(file, onProgress) {
 export async function parseResumeForDatabase(file, onProgress) {
   if (onProgress) onProgress('extracting');
   const text = await extractText(file);
-  const geminiEnabled = canUseGeminiDocumentInput(file);
-
-  if ((!text || text.trim().length < 20) && !geminiEnabled) {
-    throw new Error('Could not extract readable text from this resume. The PDF may be image-based or corrupted.');
-  }
 
   if (onProgress) onProgress('contact');
 
-  const extracted = geminiEnabled
-    ? await extractFieldsWithAI(text, true, file)
-    : (await extractFieldsWithAdminFallback(text, true)).parsed;
+  const extracted = await parseFieldsWithPrimaryGroq(text, true, 0, file);
 
   if (onProgress) onProgress('education');
   const result = normalizeParsedFields(extracted, true);
@@ -510,17 +497,10 @@ export async function parseResumeForDatabase(file, onProgress) {
 export async function parseResumeForDatabaseWithRotation(file, rotationIndex = 0, onProgress) {
   if (onProgress) onProgress('extracting');
   const text = await extractText(file);
-  const geminiEnabled = canUseGeminiDocumentInput(file);
-
-  if ((!text || text.trim().length < 20) && !geminiEnabled) {
-    throw new Error('Could not extract readable text from this resume. The PDF may be image-based or corrupted.');
-  }
 
   if (onProgress) onProgress('contact');
 
-  const extracted = geminiEnabled
-    ? await extractFieldsWithAI(text, true, file)
-    : (await extractFieldsWithAdminFallback(text, true, rotationIndex)).parsed;
+  const extracted = await parseFieldsWithPrimaryGroq(text, true, rotationIndex, file);
 
   if (onProgress) onProgress('education');
   const result = normalizeParsedFields(extracted, true);
