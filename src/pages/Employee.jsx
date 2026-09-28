@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "../Component/Header.jsx";
 import Footer from "../Component/Footer.tsx";
-import { whatsappService } from "../services/whatsappService.js";
+import { jobService } from "../services/jobService.js";
 
 const highlights = [
   {
@@ -304,6 +304,8 @@ export default function Employee() {
     positions: "",
     details: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleCall = (phone) => {
     window.location.href = `tel:${phone}`;
@@ -313,9 +315,27 @@ export default function Employee() {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    whatsappService.submitEmployerForm(formData);
+    setSubmitting(true);
+    try {
+      await jobService.submitEmployerRequirement(formData);
+      setSubmitted(true);
+      setFormData({
+        companyName: "",
+        contactPerson: "",
+        email: "",
+        phone: "",
+        requirement: "",
+        positions: "",
+        details: "",
+      });
+      setTimeout(() => setSubmitted(false), 6000);
+    } catch (err) {
+      console.error("Error submitting employer requirement:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -407,19 +427,47 @@ export default function Employee() {
                   onChange={handleChange("details")}
                 />
               </div>
+              {submitted && (
+                <div style={{
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  background: "#ecfdf5",
+                  border: "1px solid #a7f3d0",
+                  color: "#065f46",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Requirement submitted successfully! Our team will contact you shortly.
+                </div>
+              )}
               <button
                 type="submit"
-                style={styles.submitButton}
+                disabled={submitting}
+                style={{
+                  ...styles.submitButton,
+                  opacity: submitting ? 0.7 : 1,
+                  cursor: submitting ? "not-allowed" : "pointer"
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#0a2a52';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  if (!submitting) {
+                    e.currentTarget.style.background = '#0a2a52';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#0B2F5B';
-                  e.currentTarget.style.transform = 'translateY(0)';
+                  if (!submitting) {
+                    e.currentTarget.style.background = '#0B2F5B';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
                 }}
               >
-                Submit Requirement
+                {submitting ? "Submitting..." : "Submit Requirement"}
               </button>
               <p style={styles.note}>
                 We typically respond within 24 business hours.

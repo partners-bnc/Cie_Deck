@@ -12,20 +12,20 @@ export default function Header() {
 
   return (
     <header className="absolute inset-x-0 top-0 z-50 bg-transparent">
-      <div className="mx-auto flex h-28 max-w-7xl items-center justify-between gap-6 px-8">
+      <div className="relative mx-auto flex h-28 max-w-7xl items-center justify-between px-4 sm:px-8">
         <Link
           to="/"
-          className="relative h-24 w-36 shrink-0 text-lg font-semibold tracking-tight text-[#1f2937]"
+          className="flex shrink-0 items-center -ml-1 sm:-ml-3 transition-opacity hover:opacity-95"
         >
           <img
-            src="/logo.png"
+            src="/7d9e2a6b-1a4b-4373-88c7-4c2781cdaf0d (1).png"
             alt="Ciedeck"
-            className="absolute -left-5 top-[45%] h-[100px] w-auto max-w-none -translate-y-[38%] object-contain"
+            className="h-[74px] w-auto object-contain"
             loading="lazy"
           />
         </Link>
 
-        <nav className="hidden items-center gap-7 text-sm font-medium text-[#4b5563] lg:flex">
+        <nav className="hidden items-center gap-8 text-[15px] font-medium text-[#4b5563] lg:flex lg:absolute lg:left-1/2 lg:-translate-x-1/2">
           {navItems.map((item) => {
             const content = (
               <>
@@ -40,34 +40,34 @@ export default function Header() {
 
             if (item.label === "For Candidates") {
               return (
-                <Link key={item.label} to="/candidate-jobs" className="flex items-center gap-1 transition hover:text-[#111827]">
+                <Link key={item.label} to="/candidate-jobs" className="flex items-center gap-1 transition-colors duration-200 hover:text-[#0B2F5B]">
                   {content}
                 </Link>
               );
             }
             if (item.label === "For Employers") {
               return (
-                <Link key={item.label} to="/employers" className="flex items-center gap-1 transition hover:text-[#111827]">
+                <Link key={item.label} to="/employers" className="flex items-center gap-1 transition-colors duration-200 hover:text-[#0B2F5B]">
                   {content}
                 </Link>
               );
             }
             if (item.label === "Home") {
               return (
-                <Link key={item.label} to="/" className="flex items-center gap-1 transition hover:text-[#111827]">
+                <Link key={item.label} to="/" className="flex items-center gap-1 transition-colors duration-200 hover:text-[#0B2F5B]">
                   {content}
                 </Link>
               );
             }
             if (item.label === "Contact us") {
               return (
-                <Link key={item.label} to="/contact" className="flex items-center gap-1 transition hover:text-[#111827]">
+                <Link key={item.label} to="/contact" className="flex items-center gap-1 transition-colors duration-200 hover:text-[#0B2F5B]">
                   {content}
                 </Link>
               );
             }
             return (
-              <button key={item.label} type="button" className="flex items-center gap-1 transition hover:text-[#111827]">
+              <button key={item.label} type="button" className="flex items-center gap-1 transition-colors duration-200 hover:text-[#0B2F5B]">
                 {content}
               </button>
             );
@@ -77,7 +77,7 @@ export default function Header() {
         <button
           type="button"
           onClick={() => navigate("/admin/login")}
-          className="rounded-full border border-[#d1c6bd] px-5 py-2 text-sm font-semibold text-[#111827] transition hover:border-[#111827] hover:bg-[#111827] hover:text-white"
+          className="rounded-full border border-[#d1c6bd] bg-white/60 px-6 py-2.5 text-sm font-semibold text-[#111827] shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-[#0B2F5B] hover:bg-[#0B2F5B] hover:text-white hover:shadow"
         >
           Log In
         </button>

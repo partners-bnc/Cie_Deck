@@ -14,28 +14,30 @@ export default function Hero() {
   return (
     <main className="page-shell min-h-screen overflow-hidden hero-enter pt-20 sm:pt-24">
       <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-12 pt-10 sm:px-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="flex flex-col justify-center gap-10 lg:-mt-1">
-          <h1 className="text-[36px] font-semibold leading-[1.08] text-[#1f2937] sm:text-[62px]">
-            Fastest way to hire talent and land your Next role
+        <div className="flex flex-col justify-center gap-7 lg:-mt-1">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#0B2F5B]/15 bg-white/70 px-3.5 py-1 text-xs font-semibold tracking-wide text-[#0B2F5B] shadow-sm backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#0B2F5B] animate-pulse" />
+            Next-Gen Recruitment Platform
+          </div>
+
+          <h1 className="text-[34px] font-extrabold tracking-[-0.03em] leading-[1.12] text-[#0f172a] sm:text-[48px] lg:text-[54px]">
+            Fastest way to <span className="text-[#0B2F5B]">hire talent</span> and land your <span className="text-[#0B2F5B]">next role</span>
           </h1>
-          <p className="max-w-xl text-[16px] leading-7 text-[#5b6470] sm:text-[20px]">
-            Connect employers with standout
-            <br />
-            Candidates through curated, pre-vetted
-            <br />
-            hiring — not messy job boards.
+
+          <p className="max-w-xl text-[16px] leading-relaxed text-[#475569] sm:text-[18px]">
+            Connect employers with standout candidates through curated, pre-vetted hiring — not messy job boards.
           </p>
 
-          <div className="hero-actions flex items-center gap-3 pt-2 sm:gap-4">
+          <div className="hero-actions flex flex-wrap items-center gap-4 pt-1">
             <Link
               to="/employers"
-              className="hero-cta hero-cta-primary flex-1 min-w-0 whitespace-nowrap rounded-full bg-[#0B2F5B] px-5 py-3 text-[15px] font-semibold text-white shadow-[0_18px_32px_-22px_rgba(11,47,91,0.7)] transition hover:bg-[#082442] text-center no-underline sm:flex-none sm:min-w-[190px] sm:px-9 sm:py-4 sm:text-lg"
+              className="inline-flex items-center justify-center rounded-full bg-[#0B2F5B] px-8 py-3.5 text-[15px] font-semibold text-white shadow-[0_10px_25px_-5px_rgba(11,47,91,0.4)] transition-all duration-200 hover:bg-[#082442] hover:shadow-[0_14px_28px_-5px_rgba(11,47,91,0.5)] hover:-translate-y-0.5 sm:text-[16px]"
             >
               Hire Talent
             </Link>
             <Link
               to="/candidate-jobs"
-              className="hero-cta hero-cta-secondary flex-1 min-w-0 whitespace-nowrap rounded-full border border-[#cfc4bb] px-5 py-3 text-[15px] font-semibold text-[#1f2937] transition hover:border-[#1f2937] text-center no-underline sm:flex-none sm:min-w-[190px] sm:px-9 sm:py-4 sm:text-lg"
+              className="inline-flex items-center justify-center rounded-full border border-[#cbd5e1] bg-white/80 backdrop-blur-sm px-8 py-3.5 text-[15px] font-semibold text-[#1e293b] shadow-sm transition-all duration-200 hover:border-[#0B2F5B] hover:text-[#0B2F5B] hover:bg-white hover:-translate-y-0.5 sm:text-[16px]"
             >
               Find Your Role
             </Link>

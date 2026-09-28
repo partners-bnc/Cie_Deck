@@ -224,6 +224,32 @@ export default function CandidateJob() {
     setAppliedSalaryRange(null);
   };
 
+  const formatPostedDate = (job) => {
+    const rawDate = job?.created_at || job?.updated_at || job?.created_date || job?.updated_date;
+    if (!rawDate) return "Posted recently";
+
+    const postDate = new Date(rawDate);
+    if (isNaN(postDate.getTime())) return "Posted recently";
+
+    const now = new Date();
+    const diffMs = now.getTime() - postDate.getTime();
+    if (diffMs < 0) return "Posted today";
+
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (diffHours < 1) return "Posted just now";
+      return "Posted today";
+    }
+
+    if (diffDays > 30) {
+      return "Posted 30+ days ago";
+    }
+
+    return diffDays === 1 ? "Posted 1d ago" : `Posted ${diffDays}d ago`;
+  };
+
   const getSalaryInfo = (salaryStr) => {
     if (!salaryStr) return { min: 0, max: 0 };
     const str = salaryStr.toString().toLowerCase();
@@ -496,14 +522,16 @@ export default function CandidateJob() {
                         </div>
                         <div style={styles.meta}>
                           <span style={styles.metaSpan}>
-                            <svg width="12" height="12" fill="#6b7280" viewBox="0 0 24 24">
-                              <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                            <svg width="13" height="13" fill="none" stroke="#6b7280" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                              <path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h3a4 4 0 0 0 0-8" />
                             </svg>
                             {job.salary || 'Salary TBD'}
                           </span>
                         </div>
                         <div style={styles.actions}>
-                          <span style={styles.meta}>Posted 2d ago</span>
+                          <span style={{ ...styles.meta, fontSize: "11px", color: "#6b7280" }}>
+                            {formatPostedDate(job)}
+                          </span>
                           <button 
                             onClick={() => handleApplyClick(job)}
                             disabled={loadingJobId === job.id}

@@ -45,7 +45,7 @@ const NAV_ITEMS = [
     label: "Applicants database",
     icon: (
       <svg width="18" height="18" fill="#312e81" viewBox="0 0 24 24">
-        <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z" />
+        <path d="M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2zm0 2c4.42 0 8 1.57 8 2.5S16.42 9 12 9 4 7.43 4 6.5 7.58 4 12 4zm8 13.5c0 .93-3.58 2.5-8 2.5s-8-1.57-8-2.5v-2.13c1.73 1.05 4.67 1.63 8 1.63s6.27-.58 8-1.63v2.13zm0-4c0 .93-3.58 2.5-8 2.5s-8-1.57-8-2.5v-2.13c1.73 1.05 4.67 1.63 8 1.63s6.27-.58 8-1.63v2.13zm0-4c0 .93-3.58 2.5-8 2.5s-8-1.57-8-2.5V8.87c1.73 1.05 4.67 1.63 8 1.63s6.27-.58 8-1.63v2.13z" />
       </svg>
     )
   },
@@ -73,6 +73,24 @@ const NAV_ITEMS = [
     icon: (
       <svg width="18" height="18" fill="#312e81" viewBox="0 0 24 24">
         <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
+      </svg>
+    )
+  },
+  {
+    to: "/admin/employer-requirements",
+    label: "Employer Req.",
+    icon: (
+      <svg width="18" height="18" fill="#312e81" viewBox="0 0 24 24">
+        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+      </svg>
+    )
+  },
+  {
+    to: "/admin/contact-messages",
+    label: "Contact Messages",
+    icon: (
+      <svg width="18" height="18" fill="#312e81" viewBox="0 0 24 24">
+        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
       </svg>
     )
   },
@@ -183,7 +201,7 @@ export default function AdminLayout() {
                 minWidth: 0
               }}>
                 <img
-                  src="/logo.png"
+                  src="/7d9e2a6b-1a4b-4373-88c7-4c2781cdaf0d (1).png"
                   alt="Ciedeck"
                   style={{
                     height: "52px",
@@ -220,7 +238,7 @@ export default function AdminLayout() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
               <img
-                src="/fabicon.png"
+                src="/2.png"
                 alt="Ciedeck icon"
                 style={{
                   width: "34px",

@@ -1,6 +1,6 @@
 const footerLogo = {
-  height: "100px",
-  offsetX: "-30px",
+  height: "64px",
+  offsetX: "0px",
   offsetY: "0px",
 };
 
@@ -166,7 +166,7 @@ export default function Footer() {
       <div className="footer-card">
         <div className="footer-brand">
           <div className="footer-logo">
-            <img src="/Screenshot%202026-04-15%20141803.png" alt="Ciedeck" />
+            <img src="/footer.png" alt="Ciedeck" />
           </div>
           <div className="footer-copy">© 2026 Ciedeck | All Rights Reserved</div>
         </div>

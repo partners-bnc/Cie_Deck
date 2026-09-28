@@ -2,7 +2,7 @@ import { supabase, SUPABASE_URL } from './supabaseClient.js';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const SUPABASE_PAGE_SIZE = 1000;
-const CACHE_PREFIX = 'bnc_job_cache_v3';
+const CACHE_PREFIX = 'bnc_job_cache_v5';
 const inflightRequests = new Map();
 const cache = {
   jobs: { data: null, timestamp: 0 },
@@ -47,7 +47,8 @@ const APPLICANT_LIST_COLUMNS = [
   'reason_for_change',
   'work_authorization',
   'recruiter_comments',
-  'last_viewed_by'
+  'last_viewed_by',
+  'screening'
 ].join(',');
 
 const APPLICANT_DETAIL_COLUMNS = [
@@ -187,12 +188,17 @@ function mapApplicantRow(r) {
     communicationRating: r.communication_rating ?? '',
     professionalismRating: r.professionalism_rating ?? '',
     overallRating: r.overall_rating ?? '',
-    lastViewedBy: r.last_viewed_by || ''
+    lastViewedBy: r.last_viewed_by || '',
+    screening: Array.isArray(r.screening)
+      ? r.screening
+      : (typeof r.screening === 'string'
+        ? (() => { try { return JSON.parse(r.screening); } catch { return []; } })()
+        : [])
   };
 }
 
 function sanitizeSearchTerm(value) {
-  return (value || '').replace(/[,%()]/g, ' ').trim();
+  return (value || '').replace(/[%()]/g, ' ').trim();
 }
 
 function buildIlikeOrFilter(columns, value) {
@@ -228,11 +234,18 @@ function applyApplicantFilters(query, options = {}) {
     filterSkills = ''
   } = options;
 
-  const globalSearch = buildIlikeOrFilter(
-    ['full_name', 'email', 'mobile_number', 'skills', 'current_position', 'job_applied_for', 'current_company', 'applicant_code', 'uploaded_by'],
-    search
-  );
-  if (globalSearch) query = query.or(globalSearch);
+  if (search && search.trim()) {
+    const searchTokens = search.split(',').map(t => sanitizeSearchTerm(t)).filter(Boolean);
+    const searchCols = [
+      'full_name', 'email', 'mobile_number', 'skills',
+      'current_position', 'job_applied_for', 'current_company',
+      'applicant_code', 'uploaded_by'
+    ];
+    searchTokens.forEach(token => {
+      const orClause = searchCols.map(col => `${col}.ilike.%${token}%`).join(',');
+      query = query.or(orClause);
+    });
+  }
 
   if (searchHr) query = query.ilike('uploaded_by', `%${sanitizeSearchTerm(searchHr)}%`);
   if (searchDate) query = query.gte('created_on', `${searchDate}T00:00:00`).lt('created_on', `${searchDate}T23:59:59.999`);
@@ -242,21 +255,24 @@ function applyApplicantFilters(query, options = {}) {
   if (filterExp) query = query.eq('total_experience', filterExp);
   if (filterDateFrom) query = query.gte('created_on', `${filterDateFrom}T00:00:00`);
   if (filterDateTo) query = query.lte('created_on', `${filterDateTo}T23:59:59.999`);
-  if (filterJobTitle) {
-    const jobTitleFilter = buildIlikeOrFilter(['job_applied_for', 'current_position'], filterJobTitle);
-    if (jobTitleFilter) query = query.or(jobTitleFilter);
+  if (filterJobTitle && filterJobTitle.trim()) {
+    const jobTokens = filterJobTitle.split(',').map(t => sanitizeSearchTerm(t)).filter(Boolean);
+    jobTokens.forEach(token => {
+      const jobTitleFilter = ['job_applied_for', 'current_position'].map(col => `${col}.ilike.%${token}%`).join(',');
+      query = query.or(jobTitleFilter);
+    });
   }
 
-  const skillTerms = sanitizeSearchTerm(filterSkills)
-    .split(' ')
-    .join(',')
-    .split(',')
-    .map(term => term.trim())
-    .filter(Boolean);
+  if (filterSkills && filterSkills.trim()) {
+    const skillTerms = filterSkills
+      .split(',')
+      .map(term => sanitizeSearchTerm(term))
+      .filter(Boolean);
 
-  skillTerms.forEach((term) => {
-    query = query.ilike('skills', `%${term}%`);
-  });
+    skillTerms.forEach((term) => {
+      query = query.ilike('skills', `%${term}%`);
+    });
+  }
 
   return query;
 }
@@ -454,7 +470,7 @@ export const jobService = {
       return await withCache('jobs', async () => {
         const { data, error } = await supabase
           .from('jobs')
-          .select('id, job_id, title, location, job_type, experience, salary, education, vacancy, gender, description')
+          .select('id, job_id, title, location, job_type, experience, salary, education, vacancy, gender, description, created_at, updated_at')
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
@@ -465,6 +481,8 @@ export const jobService = {
           education: j.education, vacancy: j.vacancy, gender: j.gender,
           description: j.description, company: 'BnC Global',
           _uuid: j.id,
+          created_at: j.created_at,
+          updated_at: j.updated_at
         }));
       });
     } catch (error) {
@@ -486,6 +504,8 @@ export const jobService = {
         type: data.job_type, experience: data.experience, salary: data.salary,
         education: data.education, vacancy: data.vacancy, gender: data.gender,
         description: data.description, company: 'BnC Global', _uuid: data.id,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
         responsibilities: [
           'Analyze business processes and recommend improvements',
           'Collaborate with stakeholders to gather requirements',
@@ -985,6 +1005,7 @@ export const jobService = {
       if (updateData.aadharNumber !== undefined) dbUpdate.aadhar_number = updateData.aadharNumber;
       if (updateData.nationality !== undefined) dbUpdate.nationality = updateData.nationality;
       if (updateData.language !== undefined) dbUpdate.language_details = updateData.language;
+      if (updateData.screening !== undefined) dbUpdate.screening = updateData.screening;
       if (updateData.technicalRating !== undefined) dbUpdate.technical_rating = updateData.technicalRating || null;
       if (updateData.communicationRating !== undefined) dbUpdate.communication_rating = updateData.communicationRating || null;
       if (updateData.professionalismRating !== undefined) dbUpdate.professionalism_rating = updateData.professionalismRating || null;
@@ -1006,6 +1027,95 @@ export const jobService = {
       return { success: true, message: 'Candidate updated successfully', applicantId: applicantCode };
     } catch (error) {
       return { error: error.toString() };
+    }
+  },
+
+  async toggleCandidateScreening(applicantCode, hrName) {
+    try {
+      if (!applicantCode) return { success: false, error: 'Applicant ID is required' };
+      const cleanHrName = (hrName || 'HR Admin').trim();
+
+      const { data, error: fetchErr } = await supabase
+        .from('applicants')
+        .select('screening')
+        .eq('applicant_code', applicantCode)
+        .maybeSingle();
+
+      if (fetchErr) throw fetchErr;
+
+      let currentScreening = [];
+      if (data && Array.isArray(data.screening)) {
+        currentScreening = [...data.screening];
+      } else if (data && typeof data.screening === 'string') {
+        try {
+          currentScreening = JSON.parse(data.screening);
+        } catch {
+          currentScreening = [];
+        }
+      }
+
+      const existingIdx = currentScreening.findIndex(
+        s => s.hr_name?.toLowerCase() === cleanHrName.toLowerCase()
+      );
+
+      let updatedScreening;
+      let isScreenedNow = false;
+
+      if (existingIdx !== -1) {
+        updatedScreening = currentScreening.filter((_, idx) => idx !== existingIdx);
+        isScreenedNow = false;
+      } else {
+        updatedScreening = [
+          ...currentScreening,
+          {
+            hr_name: cleanHrName,
+            screened_at: new Date().toISOString()
+          }
+        ];
+        isScreenedNow = true;
+      }
+
+      const { error: updateErr } = await supabase
+        .from('applicants')
+        .update({
+          screening: updatedScreening,
+          updated_on: new Date().toISOString()
+        })
+        .eq('applicant_code', applicantCode);
+
+      if (updateErr) throw updateErr;
+
+      if (cache.databaseCandidates?.data) {
+        const idx = cache.databaseCandidates.data.findIndex(c => c.applicantId === applicantCode);
+        if (idx !== -1) {
+          cache.databaseCandidates.data[idx].screening = updatedScreening;
+        }
+      }
+
+      return {
+        success: true,
+        screening: updatedScreening,
+        isScreened: isScreenedNow
+      };
+    } catch (error) {
+      console.error('Error toggling screening:', error);
+      return { success: false, error: error.message || error.toString() };
+    }
+  },
+
+  async fetchAllFilteredApplicants(options = {}) {
+    try {
+      let query = applyApplicantFilters(
+        supabase.from('applicants').select(APPLICANT_DETAIL_COLUMNS),
+        options
+      );
+      const sortColumn = APPLICANT_SORT_MAP[options.sortKey] || 'created_on';
+      const { data, error } = await query.order(sortColumn, { ascending: options.sortDirection === 'asc' });
+      if (error) throw error;
+      return (data || []).map(mapApplicantRow);
+    } catch (error) {
+      console.error('Error fetching all filtered applicants for export:', error);
+      return [];
     }
   },
 
@@ -2030,5 +2140,245 @@ export const jobService = {
       console.error('Error fetching HR report logs:', error);
       return [];
     }
+  },
+
+  // ─────────────────────────────────────────────
+  // EMPLOYER REQUIREMENTS ("For Employers" Form)
+  // ─────────────────────────────────────────────
+  async submitEmployerRequirement(formData) {
+    const payload = {
+      company_name: formData.companyName || formData.company_name || '',
+      contact_person: formData.contactPerson || formData.contact_person || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      requirement: formData.requirement || '',
+      positions: formData.positions ? String(formData.positions) : '1',
+      details: formData.details || '',
+      status: 'New'
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('employer_requirements')
+        .insert(payload)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.warn('Supabase insert employer_requirements notice:', error.message);
+      }
+      
+      this._saveLocalSubmission('ciedeck_employer_requirements_fallback', {
+        id: data?.id || `local_${Date.now()}`,
+        ...payload,
+        created_at: data?.created_at || new Date().toISOString()
+      });
+
+      return { success: true, data: data || payload };
+    } catch (err) {
+      console.error('Error submitting employer requirement:', err);
+      this._saveLocalSubmission('ciedeck_employer_requirements_fallback', {
+        id: `local_${Date.now()}`,
+        ...payload,
+        created_at: new Date().toISOString()
+      });
+      return { success: true, data: payload };
+    }
+  },
+
+  async fetchEmployerRequirements() {
+    try {
+      const { data, error } = await supabase
+        .from('employer_requirements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const localList = this._getLocalSubmissions('ciedeck_employer_requirements_fallback');
+      if (error) {
+        console.warn('fetchEmployerRequirements fallback:', error.message);
+        return localList;
+      }
+
+      const dbIds = new Set((data || []).map(d => d.id));
+      const merged = [...(data || [])];
+      for (const loc of localList) {
+        if (!dbIds.has(loc.id)) {
+          merged.push(loc);
+        }
+      }
+      return merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } catch (err) {
+      console.error('Error fetching employer requirements:', err);
+      return this._getLocalSubmissions('ciedeck_employer_requirements_fallback');
+    }
+  },
+
+  async updateEmployerRequirementStatus(id, status) {
+    try {
+      if (!id.toString().startsWith('local_')) {
+        await supabase
+          .from('employer_requirements')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', id);
+      }
+      this._updateLocalSubmissionStatus('ciedeck_employer_requirements_fallback', id, status);
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating employer requirement status:', err);
+      return { error: err.message };
+    }
+  },
+
+  async deleteEmployerRequirement(id) {
+    try {
+      if (!id.toString().startsWith('local_')) {
+        await supabase
+          .from('employer_requirements')
+          .delete()
+          .eq('id', id);
+      }
+      this._deleteLocalSubmission('ciedeck_employer_requirements_fallback', id);
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting employer requirement:', err);
+      return { error: err.message };
+    }
+  },
+
+  // ─────────────────────────────────────────────
+  // CONTACT MESSAGES ("Contact Us" Form)
+  // ─────────────────────────────────────────────
+  async submitContactMessage(formData) {
+    const payload = {
+      full_name: formData.fullName || formData.full_name || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
+      subject: formData.subject || '',
+      message: formData.message || '',
+      status: 'Unread'
+    };
+
+    try {
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .insert(payload)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.warn('Supabase insert contact_messages notice:', error.message);
+      }
+
+      this._saveLocalSubmission('ciedeck_contact_messages_fallback', {
+        id: data?.id || `local_${Date.now()}`,
+        ...payload,
+        created_at: data?.created_at || new Date().toISOString()
+      });
+
+      return { success: true, data: data || payload };
+    } catch (err) {
+      console.error('Error submitting contact message:', err);
+      this._saveLocalSubmission('ciedeck_contact_messages_fallback', {
+        id: `local_${Date.now()}`,
+        ...payload,
+        created_at: new Date().toISOString()
+      });
+      return { success: true, data: payload };
+    }
+  },
+
+  async fetchContactMessages() {
+    try {
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const localList = this._getLocalSubmissions('ciedeck_contact_messages_fallback');
+      if (error) {
+        console.warn('fetchContactMessages fallback:', error.message);
+        return localList;
+      }
+
+      const dbIds = new Set((data || []).map(d => d.id));
+      const merged = [...(data || [])];
+      for (const loc of localList) {
+        if (!dbIds.has(loc.id)) {
+          merged.push(loc);
+        }
+      }
+      return merged.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } catch (err) {
+      console.error('Error fetching contact messages:', err);
+      return this._getLocalSubmissions('ciedeck_contact_messages_fallback');
+    }
+  },
+
+  async updateContactMessageStatus(id, status) {
+    try {
+      if (!id.toString().startsWith('local_')) {
+        await supabase
+          .from('contact_messages')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', id);
+      }
+      this._updateLocalSubmissionStatus('ciedeck_contact_messages_fallback', id, status);
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating contact message status:', err);
+      return { error: err.message };
+    }
+  },
+
+  async deleteContactMessage(id) {
+    try {
+      if (!id.toString().startsWith('local_')) {
+        await supabase
+          .from('contact_messages')
+          .delete()
+          .eq('id', id);
+      }
+      this._deleteLocalSubmission('ciedeck_contact_messages_fallback', id);
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting contact message:', err);
+      return { error: err.message };
+    }
+  },
+
+  // Helpers for local submission persistence
+  _saveLocalSubmission(key, item) {
+    try {
+      const items = this._getLocalSubmissions(key);
+      items.unshift(item);
+      localStorage.setItem(key, JSON.stringify(items.slice(0, 500)));
+    } catch (e) {
+      console.warn('Could not save to localStorage', e);
+    }
+  },
+
+  _getLocalSubmissions(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  _updateLocalSubmissionStatus(key, id, status) {
+    try {
+      const items = this._getLocalSubmissions(key).map(item => 
+        item.id === id ? { ...item, status, updated_at: new Date().toISOString() } : item
+      );
+      localStorage.setItem(key, JSON.stringify(items));
+    } catch {}
+  },
+
+  _deleteLocalSubmission(key, id) {
+    try {
+      const items = this._getLocalSubmissions(key).filter(item => item.id !== id);
+      localStorage.setItem(key, JSON.stringify(items));
+    } catch {}
   },
 };

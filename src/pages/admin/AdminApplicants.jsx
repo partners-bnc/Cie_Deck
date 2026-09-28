@@ -14,8 +14,11 @@ import {
   FiRefreshCw,
   FiSearch,
   FiUser,
-  FiX
+  FiX,
+  FiDownload,
+  FiCheckCircle
 } from 'react-icons/fi';
+import * as XLSX from 'xlsx';
 
 const PAGE_SIZE = 100;
 
@@ -164,6 +167,8 @@ export default function AdminApplicants() {
   const [filterDateTo, setFilterDateTo] = useState(() => sessionStorage.getItem('ciedeck_filter_filterDateTo') || '');
   const [filterJobTitle, setFilterJobTitle] = useState(() => sessionStorage.getItem('ciedeck_filter_filterJobTitle') || '');
   const [filterSkills, setFilterSkills] = useState(() => sessionStorage.getItem('ciedeck_filter_filterSkills') || '');
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [exporting, setExporting] = useState(false);
   const [sortConfig, setSortConfig] = useState(() => {
     try {
       const saved = sessionStorage.getItem('ciedeck_filter_sortConfig');
@@ -312,7 +317,110 @@ export default function AdminApplicants() {
     setFilterJobTitle('');
     setFilterSkills('');
     setSortConfig({ key: 'createdOn', direction: 'desc' });
+    setSelectedIds(new Set());
     setPage(1);
+  };
+
+  const isAllSelected = candidates.length > 0 && candidates.every(c => selectedIds.has(c.applicantId));
+  const isSomeSelected = candidates.some(c => selectedIds.has(c.applicantId)) && !isAllSelected;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (isAllSelected) {
+        candidates.forEach(c => next.delete(c.applicantId));
+      } else {
+        candidates.forEach(c => next.add(c.applicantId));
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectRow = (applicantId) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(applicantId)) {
+        next.delete(applicantId);
+      } else {
+        next.add(applicantId);
+      }
+      return next;
+    });
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      let dataToExport = [];
+      if (selectedIds.size > 0) {
+        const localMatches = candidates.filter(c => selectedIds.has(c.applicantId));
+        if (localMatches.length === selectedIds.size) {
+          dataToExport = localMatches;
+        } else {
+          dataToExport = await jobService.fetchApplicantsByIds(Array.from(selectedIds));
+        }
+      } else {
+        dataToExport = await jobService.fetchAllFilteredApplicants(buildFetchOptions(page));
+        if (!dataToExport || dataToExport.length === 0) {
+          dataToExport = candidates;
+        }
+      }
+
+      if (!dataToExport || dataToExport.length === 0) {
+        alert('No data available to export.');
+        setExporting(false);
+        return;
+      }
+
+      const rows = dataToExport.map(c => {
+        const screeningList = Array.isArray(c.screening) ? c.screening : [];
+        const screeningInfo = screeningList.length > 0
+          ? screeningList.map(s => `${s.hr_name || 'HR'} (${formatDate(s.screened_at)})`).join('; ')
+          : 'Not Screened';
+
+        return {
+          'Applicant ID': c.applicantId || '',
+          'Candidate Name': c.name || '',
+          'Email': c.email || '',
+          'Mobile Number': c.contactNumber || '',
+          'Position / Job': c.currentPosition || c.jobAppliedFor || '',
+          'Current Company': c.currentCompany || '',
+          'Total Experience': c.totalExperience ? `${c.totalExperience} yr` : '',
+          'Relevant Experience': c.relevantExperience || '',
+          'Skills': c.skills || '',
+          'Education': c.education || '',
+          'Current Location': c.currentLocation || '',
+          'Current CTC': c.currentCTC || '',
+          'Expected Pay': c.expectedPay || '',
+          'Notice Period': c.noticePeriod || '',
+          'Work Authorization': c.workAuthorization || '',
+          'Source': c.source || '',
+          'Added By': c.uploadedBy || '',
+          'Added On': formatDate(c.createdOn) || '',
+          'Status': c.status || 'Applied',
+          'AI Decision': c.shortlistDecision || '',
+          'AI Score': c.aiScore || '',
+          'Screened By': screeningInfo,
+          'Recruiter Comments': c.recruiterComments || '',
+          'Resume Link': c.resumeLink || ''
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const colWidths = Object.keys(rows[0] || {}).map(key => ({
+        wch: Math.max(key.length, ...rows.map(r => String(r[key] || '').length).slice(0, 100)) + 3
+      }));
+      ws['!cols'] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Applicants');
+      const dateSuffix = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `Applicants_Database_${dateSuffix}.xlsx`);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to export Excel file. Please try again.');
+    }
+    setExporting(false);
   };
 
   const inputStyle = {
@@ -377,6 +485,23 @@ export default function AdminApplicants() {
               <FiX size={13} /> Clean Filters
             </button>
           )}
+          <button
+            onClick={handleExportExcel}
+            disabled={exporting || loading || candidates.length === 0}
+            title="Export full details to Excel"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '7px',
+              padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
+              border: '1px solid #10b981',
+              background: selectedIds.size > 0 ? '#10b981' : '#ecfdf5',
+              color: selectedIds.size > 0 ? '#fff' : '#065f46',
+              cursor: exporting || loading || candidates.length === 0 ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <FiDownload size={13} style={{ animation: exporting ? 'spin 1s linear infinite' : 'none' }} />
+            {exporting ? 'Exporting...' : selectedIds.size > 0 ? `Export Selected (${selectedIds.size})` : 'Export to Excel'}
+          </button>
           <button onClick={() => fetchData(page)} disabled={loading} style={{
             display: 'flex', alignItems: 'center', gap: '7px',
             padding: '9px 16px', border: '1px solid #e2e8f0', borderRadius: '10px',
@@ -516,7 +641,7 @@ export default function AdminApplicants() {
 
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 16px rgba(11,47,91,0.05)' }}>
         {loading ? (
-          <AdminTableSkeleton rows={8} columns={11} />
+          <AdminTableSkeleton rows={8} columns={13} />
         ) : candidates.length === 0 ? (
           <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
             <FiDatabase size={36} style={{ marginBottom: '12px', display: 'block', margin: '0 auto 12px' }} />
@@ -529,6 +654,15 @@ export default function AdminApplicants() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ width: '40px', padding: '11px 8px 11px 16px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      ref={el => { if (el) el.indeterminate = isSomeSelected; }}
+                      onChange={toggleSelectAll}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#0B2F5B' }}
+                    />
+                  </th>
                   {[
                     { label: 'ID', key: 'applicantId' },
                     { label: 'Name', key: 'name' },
@@ -538,6 +672,7 @@ export default function AdminApplicants() {
                     { label: 'Added By', key: 'uploadedBy' },
                     { label: 'Exp.', key: 'totalExperience' },
                     { label: 'Status', key: 'status' },
+                    { label: 'Screening', key: null },
                     { label: 'CV Age', key: 'createdOn' },
                     { label: 'Added On', key: 'createdOn' },
                     { label: '', key: null }
@@ -577,8 +712,16 @@ export default function AdminApplicants() {
                     key={candidate.applicantId || index}
                     className="row-hover"
                     onClick={() => navigate(`/admin/applicants/${candidate.applicantId}`)}
-                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s', background: '#fff' }}
+                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s', background: selectedIds.has(candidate.applicantId) ? '#f0f7ff' : '#fff' }}
                   >
+                    <td style={{ width: '40px', padding: '12px 8px 12px 16px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(candidate.applicantId)}
+                        onChange={() => toggleSelectRow(candidate.applicantId)}
+                        style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#0B2F5B' }}
+                      />
+                    </td>
                     <td style={{ padding: '12px 14px', color: '#94a3b8', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>{candidate.applicantId}</td>
                     <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
@@ -605,6 +748,29 @@ export default function AdminApplicants() {
                     <td style={{ padding: '12px 14px', color: '#475569', whiteSpace: 'nowrap', fontSize: '12px' }}>{candidate.uploadedBy || '-'}</td>
                     <td style={{ padding: '12px 14px', color: '#475569', whiteSpace: 'nowrap', fontSize: '12px' }}>{candidate.totalExperience ? `${candidate.totalExperience} yr` : '-'}</td>
                     <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}><StatusBadge status={candidate.status} /></td>
+                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                      {Array.isArray(candidate.screening) && candidate.screening.length > 0 ? (
+                        <span
+                          title={candidate.screening.map(s => `${s.hr_name || 'HR'} (${formatDate(s.screened_at)})`).join('\n')}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            background: '#ecfdf5',
+                            color: '#065f46',
+                            border: '1px solid #a7f3d0'
+                          }}
+                        >
+                          ✓ {candidate.screening.length} {candidate.screening.length === 1 ? 'HR' : 'HRs'}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#cbd5e1', fontSize: '12px' }}>—</span>
+                      )}
+                    </td>
                     <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#64748b', fontSize: '12px' }}>
                         <FiClock size={11} /> {cvAge(candidate.createdOn)}

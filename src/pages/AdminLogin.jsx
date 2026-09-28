@@ -68,7 +68,7 @@ export default function AdminLogin() {
       >
         <div style={{ textAlign: "center", marginBottom: "36px" }}>
           <img
-            src="/logo.png"
+            src="/7d9e2a6b-1a4b-4373-88c7-4c2781cdaf0d (1).png"
             alt="Ciedeck"
             style={{
               height: "82px",

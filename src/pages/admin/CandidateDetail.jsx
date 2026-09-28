@@ -5,7 +5,8 @@ import {
   FiArrowLeft, FiUser, FiMail, FiPhone, FiMapPin, FiBriefcase,
   FiBookOpen, FiTag, FiAlignLeft, FiCalendar, FiExternalLink,
   FiEdit3, FiSave, FiX, FiAward, FiClock, FiCheckCircle,
-  FiLoader, FiDatabase, FiFileText, FiActivity, FiClipboard, FiPhoneCall, FiMessageSquare
+  FiLoader, FiDatabase, FiFileText, FiActivity, FiClipboard, FiPhoneCall, FiMessageSquare,
+  FiCheckSquare, FiSquare, FiCheck
 } from 'react-icons/fi';
 
 // ── Helpers ──
@@ -135,6 +136,9 @@ export default function CandidateDetail() {
   const [newLogNotes, setNewLogNotes] = useState('');
   const [newLogType, setNewLogType] = useState('Call');
   const [addingLog, setAddingLog] = useState(false);
+
+  const [showScreeningDetails, setShowScreeningDetails] = useState(false);
+  const [screeningSaving, setScreeningSaving] = useState(false);
 
   const [rightTab, setRightTab] = useState('Applicant');
   const [ratings, setRatings] = useState({
@@ -287,6 +291,23 @@ export default function CandidateDetail() {
     setSaving(false);
   };
 
+  const handleToggleScreening = async () => {
+    if (!candidate?.applicantId || screeningSaving) return;
+    setScreeningSaving(true);
+    const hrName = sessionStorage.getItem('bnc_admin_name') || sessionStorage.getItem('bnc_admin_id') || sessionStorage.getItem('loginId') || 'HR Admin';
+    const res = await jobService.toggleCandidateScreening(candidate.applicantId, hrName);
+    if (res.success) {
+      setCandidate(prev => ({ ...prev, screening: res.screening }));
+      setForm(prev => ({ ...prev, screening: res.screening }));
+      setSaveMsg(res.isScreened ? `Screened by ${hrName}` : 'Screening removed');
+      setTimeout(() => setSaveMsg(''), 3000);
+    } else {
+      setSaveMsg('Error: ' + (res.error || 'Failed to update screening'));
+      setTimeout(() => setSaveMsg(''), 3000);
+    }
+    setScreeningSaving(false);
+  };
+
   const handleCancel = () => { setForm({ ...candidate }); setEditing(false); };
 
   if (loading) {
@@ -404,6 +425,94 @@ export default function CandidateDetail() {
               </span>
             )}
           </button>
+
+          {/* Screening button right of Log Comm */}
+          {(() => {
+            const currentHr = sessionStorage.getItem('bnc_admin_name') || sessionStorage.getItem('bnc_admin_id') || sessionStorage.getItem('loginId') || 'HR Admin';
+            const sList = Array.isArray(candidate.screening) ? candidate.screening : [];
+            const isScreenedByMe = sList.some(s => s.hr_name?.toLowerCase() === currentHr.toLowerCase());
+
+            return (
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <button
+                  onClick={handleToggleScreening}
+                  disabled={screeningSaving}
+                  className="action-btn"
+                  title={sList.length > 0 ? sList.map(s => `${s.hr_name} (${fmtDate(s.screened_at)})`).join('\n') : 'Click to mark profile as screened'}
+                  style={{
+                    padding: '6px 14px',
+                    border: isScreenedByMe ? '1px solid #10b981' : '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    background: isScreenedByMe ? '#ecfdf5' : '#fff',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: screeningSaving ? 'not-allowed' : 'pointer',
+                    color: isScreenedByMe ? '#065f46' : '#1e293b',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isScreenedByMe ? (
+                    <FiCheckSquare size={13} color="#10b981" />
+                  ) : (
+                    <FiSquare size={13} color="#94a3b8" />
+                  )}
+                  <span>{isScreenedByMe ? 'Screened' : 'Screening'}</span>
+                  {sList.length > 0 && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowScreeningDetails(prev => !prev);
+                      }}
+                      title="View all HR screenings"
+                      style={{
+                        background: isScreenedByMe ? '#a7f3d0' : '#f1f5f9',
+                        color: isScreenedByMe ? '#065f46' : '#475569',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {sList.length}
+                    </span>
+                  )}
+                </button>
+
+                {showScreeningDetails && sList.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '6px',
+                    background: '#fff',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.12)',
+                    padding: '12px',
+                    zIndex: 100,
+                    minWidth: '240px'
+                  }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Screened By ({sList.length})</span>
+                      <button onClick={() => setShowScreeningDetails(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px' }}><FiX size={12} /></button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                      {sList.map((item, idx) => (
+                        <div key={idx} style={{ padding: '6px 8px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                          <div style={{ fontWeight: 700, fontSize: '12px', color: '#1e293b' }}>{item.hr_name || 'HR Admin'}</div>
+                          <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{fmtDate(item.screened_at)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
       {/* Rating / AI Box */}
