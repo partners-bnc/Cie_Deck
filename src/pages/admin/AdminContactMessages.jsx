@@ -157,32 +157,32 @@ export default function AdminContactMessages() {
       </div>
 
       {/* Stats Badges */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px', marginBottom: '24px' }}>
-        <div style={{ background: '#ffffff', borderRadius: '14px', padding: '14px 18px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '16px 20px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
           <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>Total Messages</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a' }}>{counts.total}</div>
         </div>
-        <div style={{ background: '#FEE2E2', borderRadius: '14px', padding: '14px 18px', border: '1px solid #FECACA' }}>
+        <div style={{ background: '#FEE2E2', borderRadius: '16px', padding: '16px 20px', border: '1px solid #FECACA' }}>
           <div style={{ fontSize: '12px', color: '#991B1B', fontWeight: 600, marginBottom: '4px' }}>Unread</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#991B1B' }}>{counts.unread}</div>
         </div>
-        <div style={{ background: '#E0E7FF', borderRadius: '14px', padding: '14px 18px', border: '1px solid #C7D2FE' }}>
+        <div style={{ background: '#E0E7FF', borderRadius: '16px', padding: '16px 20px', border: '1px solid #C7D2FE' }}>
           <div style={{ fontSize: '12px', color: '#3730A3', fontWeight: 600, marginBottom: '4px' }}>Read</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#3730A3' }}>{counts.read}</div>
         </div>
-        <div style={{ background: '#D1FAE5', borderRadius: '14px', padding: '14px 18px', border: '1px solid #A7F3D0' }}>
+        <div style={{ background: '#D1FAE5', borderRadius: '16px', padding: '16px 20px', border: '1px solid #A7F3D0' }}>
           <div style={{ fontSize: '12px', color: '#065F46', fontWeight: 600, marginBottom: '4px' }}>Replied</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#065F46' }}>{counts.replied}</div>
         </div>
-        <div style={{ background: '#F1F5F9', borderRadius: '14px', padding: '14px 18px', border: '1px solid #CBD5E1' }}>
+        <div style={{ background: '#F1F5F9', borderRadius: '16px', padding: '16px 20px', border: '1px solid #CBD5E1' }}>
           <div style={{ fontSize: '12px', color: '#475569', fontWeight: 600, marginBottom: '4px' }}>Archived</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#475569' }}>{counts.archived}</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div style={{ background: '#ffffff', borderRadius: '16px', padding: '14px 20px', border: '1px solid #e2e8f0', marginBottom: '20px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ position: 'relative', width: '340px', maxWidth: '100%' }}>
+      <div style={{ background: '#ffffff', borderRadius: '16px', padding: '16px 20px', border: '1px solid #e2e8f0', marginBottom: '20px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ position: 'relative', flex: '1', minWidth: '260px' }}>
           <FiSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           <input
             type="text"
@@ -197,8 +197,7 @@ export default function AdminContactMessages() {
               fontSize: '13px',
               outline: 'none',
               fontFamily: 'inherit',
-              background: '#f8fafc',
-              boxSizing: 'border-box'
+              background: '#f8fafc'
             }}
           />
         </div>

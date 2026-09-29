@@ -48,7 +48,11 @@ const APPLICANT_LIST_COLUMNS = [
   'work_authorization',
   'recruiter_comments',
   'last_viewed_by',
-  'screening'
+  'screening',
+  'technical_rating',
+  'communication_rating',
+  'professionalism_rating',
+  'overall_rating'
 ].join(',');
 
 const APPLICANT_DETAIL_COLUMNS = [
@@ -57,11 +61,7 @@ const APPLICANT_DETAIL_COLUMNS = [
   'ai_analysis',
   'aadhar_number',
   'nationality',
-  'language_details',
-  'technical_rating',
-  'communication_rating',
-  'professionalism_rating',
-  'overall_rating'
+  'language_details'
 ].join(',');
 
 function canUseStorage() {
@@ -231,7 +231,12 @@ function applyApplicantFilters(query, options = {}) {
     filterDateFrom = '',
     filterDateTo = '',
     filterJobTitle = '',
-    filterSkills = ''
+    filterSkills = '',
+    filterScreening = '',
+    filterTechnicalRating = '',
+    filterCommunicationRating = '',
+    filterProfessionalismRating = '',
+    filterOverallRating = ''
   } = options;
 
   if (search && search.trim()) {
@@ -272,6 +277,34 @@ function applyApplicantFilters(query, options = {}) {
     skillTerms.forEach((term) => {
       query = query.ilike('skills', `%${term}%`);
     });
+  }
+
+  // Screening filter
+  if (filterScreening) {
+    if (filterScreening === 'screened') {
+      query = query.not('screening', 'is', null).neq('screening', '[]');
+    } else if (filterScreening === 'unscreened') {
+      query = query.or('screening.is.null,screening.eq.[]');
+    } else if (filterScreening.startsWith('hr:')) {
+      const hrName = sanitizeSearchTerm(filterScreening.replace('hr:', ''));
+      if (hrName) {
+        query = query.not('screening', 'is', null).neq('screening', '[]').ilike('screening', `%${hrName}%`);
+      }
+    }
+  }
+
+  // Ratings filters (numeric >= filter)
+  if (filterTechnicalRating && !isNaN(Number(filterTechnicalRating))) {
+    query = query.gte('technical_rating', Number(filterTechnicalRating));
+  }
+  if (filterCommunicationRating && !isNaN(Number(filterCommunicationRating))) {
+    query = query.gte('communication_rating', Number(filterCommunicationRating));
+  }
+  if (filterProfessionalismRating && !isNaN(Number(filterProfessionalismRating))) {
+    query = query.gte('professionalism_rating', Number(filterProfessionalismRating));
+  }
+  if (filterOverallRating && !isNaN(Number(filterOverallRating))) {
+    query = query.gte('overall_rating', Number(filterOverallRating));
   }
 
   return query;

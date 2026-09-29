@@ -16,7 +16,12 @@ import {
   FiUser,
   FiX,
   FiDownload,
-  FiCheckCircle
+  FiCheckCircle,
+  FiStar,
+  FiCode,
+  FiMessageSquare,
+  FiAward,
+  FiSliders
 } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 
@@ -130,6 +135,94 @@ function StatusBadge({ status }) {
   );
 }
 
+function RatingFilterPicker({ label, value, onChange, icon }) {
+  const options = [
+    { val: '', label: 'Any' },
+    { val: '1', label: '1★+' },
+    { val: '2', label: '2★+' },
+    { val: '3', label: '3★+' },
+    { val: '4', label: '4★+' },
+    { val: '5', label: '5★' },
+  ];
+
+  return (
+    <div style={{
+      background: value ? '#fffdf7' : '#f8fafc',
+      padding: '12px 14px',
+      borderRadius: '12px',
+      border: value ? '1.5px solid #fde68a' : '1px solid #e2e8f0',
+      boxShadow: value ? '0 2px 8px rgba(245, 158, 11, 0.08)' : 'none',
+      transition: 'all 0.2s ease'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {icon} {label}
+        </span>
+        {value ? (
+          <span style={{
+            fontSize: '10px',
+            fontWeight: 800,
+            color: '#b45309',
+            background: '#fef3c7',
+            padding: '2px 7px',
+            borderRadius: '10px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '3px',
+            border: '1px solid #fde68a'
+          }}>
+            &ge; {value} <FiStar size={9} style={{ fill: '#b45309' }} />
+          </span>
+        ) : (
+          <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8' }}>
+            All
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: '4px' }}>
+        {options.map((opt) => {
+          const isSelected = String(value) === String(opt.val);
+          return (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => onChange(isSelected && opt.val !== '' ? '' : opt.val)}
+              style={{
+                flex: 1,
+                padding: '6px 2px',
+                borderRadius: '7px',
+                fontSize: '11px',
+                fontWeight: isSelected ? 800 : 600,
+                border: isSelected ? '1px solid #f59e0b' : '1px solid #cbd5e1',
+                background: isSelected ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : '#ffffff',
+                color: isSelected ? '#78350f' : '#64748b',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                textAlign: 'center',
+                boxShadow: isSelected ? '0 1px 4px rgba(245, 158, 11, 0.2)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.background = '#f1f5f9';
+                  e.currentTarget.style.borderColor = '#94a3b8';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.background = '#ffffff';
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                }
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminApplicants() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
@@ -167,6 +260,11 @@ export default function AdminApplicants() {
   const [filterDateTo, setFilterDateTo] = useState(() => sessionStorage.getItem('ciedeck_filter_filterDateTo') || '');
   const [filterJobTitle, setFilterJobTitle] = useState(() => sessionStorage.getItem('ciedeck_filter_filterJobTitle') || '');
   const [filterSkills, setFilterSkills] = useState(() => sessionStorage.getItem('ciedeck_filter_filterSkills') || '');
+  const [filterScreening, setFilterScreening] = useState(() => sessionStorage.getItem('ciedeck_filter_filterScreening') || '');
+  const [filterTechnicalRating, setFilterTechnicalRating] = useState(() => sessionStorage.getItem('ciedeck_filter_filterTechnicalRating') || '');
+  const [filterCommunicationRating, setFilterCommunicationRating] = useState(() => sessionStorage.getItem('ciedeck_filter_filterCommunicationRating') || '');
+  const [filterProfessionalismRating, setFilterProfessionalismRating] = useState(() => sessionStorage.getItem('ciedeck_filter_filterProfessionalismRating') || '');
+  const [filterOverallRating, setFilterOverallRating] = useState(() => sessionStorage.getItem('ciedeck_filter_filterOverallRating') || '');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [exporting, setExporting] = useState(false);
   const [sortConfig, setSortConfig] = useState(() => {
@@ -191,15 +289,24 @@ export default function AdminApplicants() {
     sessionStorage.setItem('ciedeck_filter_filterDateTo', filterDateTo);
     sessionStorage.setItem('ciedeck_filter_filterJobTitle', filterJobTitle);
     sessionStorage.setItem('ciedeck_filter_filterSkills', filterSkills);
+    sessionStorage.setItem('ciedeck_filter_filterScreening', filterScreening);
+    sessionStorage.setItem('ciedeck_filter_filterTechnicalRating', filterTechnicalRating);
+    sessionStorage.setItem('ciedeck_filter_filterCommunicationRating', filterCommunicationRating);
+    sessionStorage.setItem('ciedeck_filter_filterProfessionalismRating', filterProfessionalismRating);
+    sessionStorage.setItem('ciedeck_filter_filterOverallRating', filterOverallRating);
     sessionStorage.setItem('ciedeck_filter_sortConfig', JSON.stringify(sortConfig));
   }, [
     page, search, searchHr, searchDate, filterSource, filterStatus, filterAI,
-    filterExp, filterDateFrom, filterDateTo, filterJobTitle, filterSkills, sortConfig
+    filterExp, filterDateFrom, filterDateTo, filterJobTitle, filterSkills,
+    filterScreening, filterTechnicalRating, filterCommunicationRating,
+    filterProfessionalismRating, filterOverallRating, sortConfig
   ]);
 
   const hasActiveFilters = Boolean(
     search || searchHr || searchDate || filterSource || filterStatus || filterAI ||
-    filterExp || filterDateFrom || filterDateTo || filterJobTitle || filterSkills
+    filterExp || filterDateFrom || filterDateTo || filterJobTitle || filterSkills ||
+    filterScreening || filterTechnicalRating || filterCommunicationRating ||
+    filterProfessionalismRating || filterOverallRating
   );
 
   const buildFetchOptions = useCallback((nextPage = page) => ({
@@ -216,6 +323,11 @@ export default function AdminApplicants() {
     filterDateTo,
     filterJobTitle,
     filterSkills,
+    filterScreening,
+    filterTechnicalRating,
+    filterCommunicationRating,
+    filterProfessionalismRating,
+    filterOverallRating,
     sortKey: sortConfig.key,
     sortDirection: sortConfig.direction
   }), [
@@ -231,6 +343,11 @@ export default function AdminApplicants() {
     filterDateTo,
     filterJobTitle,
     filterSkills,
+    filterScreening,
+    filterTechnicalRating,
+    filterCommunicationRating,
+    filterProfessionalismRating,
+    filterOverallRating,
     sortConfig
   ]);
 
@@ -292,6 +409,11 @@ export default function AdminApplicants() {
     filterDateTo,
     filterJobTitle,
     filterSkills,
+    filterScreening,
+    filterTechnicalRating,
+    filterCommunicationRating,
+    filterProfessionalismRating,
+    filterOverallRating,
     sortConfig
   ]);
 
@@ -316,6 +438,11 @@ export default function AdminApplicants() {
     setFilterDateTo('');
     setFilterJobTitle('');
     setFilterSkills('');
+    setFilterScreening('');
+    setFilterTechnicalRating('');
+    setFilterCommunicationRating('');
+    setFilterProfessionalismRating('');
+    setFilterOverallRating('');
     setSortConfig({ key: 'createdOn', direction: 'desc' });
     setSelectedIds(new Set());
     setPage(1);
@@ -401,6 +528,10 @@ export default function AdminApplicants() {
           'AI Decision': c.shortlistDecision || '',
           'AI Score': c.aiScore || '',
           'Screened By': screeningInfo,
+          'Technical Rating': c.technicalRating !== '' && c.technicalRating !== null && c.technicalRating !== undefined ? c.technicalRating : '',
+          'Communication Rating': c.communicationRating !== '' && c.communicationRating !== null && c.communicationRating !== undefined ? c.communicationRating : '',
+          'Professionalism Rating': c.professionalismRating !== '' && c.professionalismRating !== null && c.professionalismRating !== undefined ? c.professionalismRating : '',
+          'Overall Rating': c.overallRating !== '' && c.overallRating !== null && c.overallRating !== undefined ? c.overallRating : '',
           'Recruiter Comments': c.recruiterComments || '',
           'Resume Link': c.resumeLink || ''
         };
@@ -567,67 +698,146 @@ export default function AdminApplicants() {
       </div>
 
       {showFilters && (
-        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px 18px', marginBottom: '14px', animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>Advanced Filters</span>
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', marginBottom: '16px', animation: 'fadeIn 0.3s ease', boxShadow: '0 4px 20px rgba(11,47,91,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#0B2F5B15', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0B2F5B' }}>
+                <FiSliders size={15} />
+              </div>
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>Advanced Search & Evaluation Filters</span>
+                <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '8px' }}>Refine by profile, HR screening status, and ratings</span>
+              </div>
+            </div>
             {hasActiveFilters && (
-              <button onClick={clearFilters} style={{ fontSize: '11px', color: '#dc3545', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                Clear All
+              <button onClick={clearFilters} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca', padding: '5px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, transition: 'all 0.15s' }}>
+                <FiX size={13} /> Reset All Filters
               </button>
             )}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Source</label>
-              <select value={filterSource} onChange={(e) => { setFilterSource(e.target.value); setPage(1); }} style={inputStyle}>
-                <option value="">All Sources</option>
-                {SOURCE_OPTIONS.map((source) => <option key={source} value={source}>{source}</option>)}
-              </select>
+
+          {/* SECTION 1: General & Profile Filters */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiUser size={12} /> Candidate Profile & Sourcing
             </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Status</label>
-              <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} style={inputStyle}>
-                <option value="">All Statuses</option>
-                {STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-              </select>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Source</label>
+                <select value={filterSource} onChange={(e) => { setFilterSource(e.target.value); setPage(1); }} style={inputStyle}>
+                  <option value="">All Sources</option>
+                  {SOURCE_OPTIONS.map((source) => <option key={source} value={source}>{source}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Status</label>
+                <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} style={inputStyle}>
+                  <option value="">All Statuses</option>
+                  {STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Screening Status</label>
+                <select value={filterScreening} onChange={(e) => { setFilterScreening(e.target.value); setPage(1); }} style={{ ...inputStyle, borderColor: filterScreening ? '#10b981' : '#e2e8f0', background: filterScreening ? '#f0fdf4' : '#fff' }}>
+                  <option value="">All Candidates</option>
+                  <option value="screened">✓ Only Screened (Any HR)</option>
+                  <option value="unscreened">✗ Unscreened Candidates</option>
+                  {admins.length > 0 && (
+                    <optgroup label="Screened by Specific HR">
+                      {admins.map((admin, idx) => (
+                        <option key={idx} value={`hr:${admin.hr_name}`}>Screened by {admin.hr_name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>AI Decision</label>
+                <select value={filterAI} onChange={(e) => { setFilterAI(e.target.value); setPage(1); }} style={inputStyle}>
+                  <option value="">All</option>
+                  <option value="Shortlisted">Shortlisted</option>
+                  <option value="Not Shortlisted">Not Shortlisted</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Experience</label>
+                <select value={filterExp} onChange={(e) => { setFilterExp(e.target.value); setPage(1); }} style={inputStyle}>
+                  <option value="">Any Experience</option>
+                  <option value="0">Fresher (0 yr)</option>
+                  <option value="1">1 Year</option>
+                  <option value="2">2 Years</option>
+                  <option value="3">3 Years</option>
+                  <option value="4">4 Years</option>
+                  <option value="5">5 Years</option>
+                  <option value="6-10">6-10 Years</option>
+                  <option value="10+">10+ Years</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>From Date</label>
+                <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>To Date</label>
+                <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Job Title</label>
+                <input placeholder="e.g. Frontend, Java..." value={filterJobTitle} onChange={(e) => { setFilterJobTitle(e.target.value); setPage(1); }} style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Key Skills</label>
+                <input placeholder="e.g. React, Node, Python, SQL" value={filterSkills} onChange={(e) => { setFilterSkills(e.target.value); setPage(1); }} style={inputStyle} />
+              </div>
             </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>AI Decision</label>
-              <select value={filterAI} onChange={(e) => { setFilterAI(e.target.value); setPage(1); }} style={inputStyle}>
-                <option value="">All</option>
-                <option value="Shortlisted">Shortlisted</option>
-                <option value="Not Shortlisted">Not Shortlisted</option>
-              </select>
+          </div>
+
+          {/* SECTION 2: Candidate Evaluation & Ratings */}
+          <div style={{ background: '#fafaf9', border: '1px solid #e7e5e4', borderRadius: '14px', padding: '14px 16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: '#78350f', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FiStar size={13} style={{ fill: '#f59e0b', color: '#f59e0b' }} /> Candidate Ratings & Skill Evaluation (1 - 5 ★)
+              </div>
+              {(filterTechnicalRating || filterCommunicationRating || filterProfessionalismRating || filterOverallRating) && (
+                <button
+                  onClick={() => {
+                    setFilterTechnicalRating('');
+                    setFilterCommunicationRating('');
+                    setFilterProfessionalismRating('');
+                    setFilterOverallRating('');
+                    setPage(1);
+                  }}
+                  style={{ fontSize: '10px', color: '#b45309', background: '#fef3c7', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  Clear Ratings
+                </button>
+              )}
             </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Experience</label>
-              <select value={filterExp} onChange={(e) => { setFilterExp(e.target.value); setPage(1); }} style={inputStyle}>
-                <option value="">Any</option>
-                <option value="0">Fresher</option>
-                <option value="1">1 Year</option>
-                <option value="2">2 Years</option>
-                <option value="3">3 Years</option>
-                <option value="4">4 Years</option>
-                <option value="5">5 Years</option>
-                <option value="6-10">6-10 Years</option>
-                <option value="10+">10+ Years</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>From Date</label>
-              <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>To Date</label>
-              <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} style={inputStyle} />
-            </div>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Job Title</label>
-              <input placeholder="e.g. Developer" value={filterJobTitle} onChange={(e) => { setFilterJobTitle(e.target.value); setPage(1); }} style={inputStyle} />
-            </div>
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '5px' }}>Skills</label>
-              <input placeholder="e.g. React, Node" value={filterSkills} onChange={(e) => { setFilterSkills(e.target.value); setPage(1); }} style={inputStyle} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+              <RatingFilterPicker
+                label="Technical Skills"
+                value={filterTechnicalRating}
+                onChange={(val) => { setFilterTechnicalRating(val); setPage(1); }}
+                icon={<FiCode size={13} style={{ color: '#2563eb' }} />}
+              />
+              <RatingFilterPicker
+                label="Communication Skills"
+                value={filterCommunicationRating}
+                onChange={(val) => { setFilterCommunicationRating(val); setPage(1); }}
+                icon={<FiMessageSquare size={13} style={{ color: '#059669' }} />}
+              />
+              <RatingFilterPicker
+                label="Professionalism"
+                value={filterProfessionalismRating}
+                onChange={(val) => { setFilterProfessionalismRating(val); setPage(1); }}
+                icon={<FiAward size={13} style={{ color: '#7c3aed' }} />}
+              />
+              <RatingFilterPicker
+                label="Overall Rating"
+                value={filterOverallRating}
+                onChange={(val) => { setFilterOverallRating(val); setPage(1); }}
+                icon={<FiStar size={13} style={{ color: '#d97706', fill: '#d97706' }} />}
+              />
             </div>
           </div>
         </div>
@@ -641,7 +851,7 @@ export default function AdminApplicants() {
 
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 2px 16px rgba(11,47,91,0.05)' }}>
         {loading ? (
-          <AdminTableSkeleton rows={8} columns={13} />
+          <AdminTableSkeleton rows={8} columns={14} />
         ) : candidates.length === 0 ? (
           <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
             <FiDatabase size={36} style={{ marginBottom: '12px', display: 'block', margin: '0 auto 12px' }} />
@@ -672,6 +882,7 @@ export default function AdminApplicants() {
                     { label: 'Added By', key: 'uploadedBy' },
                     { label: 'Exp.', key: 'totalExperience' },
                     { label: 'Status', key: 'status' },
+                    { label: 'Rating', key: 'overallRating' },
                     { label: 'Screening', key: null },
                     { label: 'CV Age', key: 'createdOn' },
                     { label: 'Added On', key: 'createdOn' },
@@ -748,6 +959,30 @@ export default function AdminApplicants() {
                     <td style={{ padding: '12px 14px', color: '#475569', whiteSpace: 'nowrap', fontSize: '12px' }}>{candidate.uploadedBy || '-'}</td>
                     <td style={{ padding: '12px 14px', color: '#475569', whiteSpace: 'nowrap', fontSize: '12px' }}>{candidate.totalExperience ? `${candidate.totalExperience} yr` : '-'}</td>
                     <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}><StatusBadge status={candidate.status} /></td>
+                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                      {candidate.overallRating || candidate.technicalRating || candidate.communicationRating || candidate.professionalismRating ? (
+                        <div
+                          title={`Overall: ${candidate.overallRating || '—'} ★\nTechnical: ${candidate.technicalRating || '—'} ★\nCommunication: ${candidate.communicationRating || '—'} ★\nProfessionalism: ${candidate.professionalismRating || '—'} ★`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            background: '#fffbeb',
+                            color: '#b45309',
+                            border: '1px solid #fde68a'
+                          }}
+                        >
+                          <FiStar size={11} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                          {candidate.overallRating ? `${candidate.overallRating} ★` : `${candidate.technicalRating || candidate.communicationRating || candidate.professionalismRating} ★`}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#cbd5e1', fontSize: '12px' }}>—</span>
+                      )}
+                    </td>
                     <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                       {Array.isArray(candidate.screening) && candidate.screening.length > 0 ? (
                         <span

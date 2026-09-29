@@ -153,32 +153,32 @@ export default function AdminEmployerRequirements() {
       </div>
 
       {/* Stats Badges */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px', marginBottom: '24px' }}>
-        <div style={{ background: '#ffffff', borderRadius: '14px', padding: '14px 18px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '16px 20px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
           <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>Total Submissions</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a' }}>{counts.total}</div>
         </div>
-        <div style={{ background: '#FEF3C7', borderRadius: '14px', padding: '14px 18px', border: '1px solid #FDE68A' }}>
+        <div style={{ background: '#FEF3C7', borderRadius: '16px', padding: '16px 20px', border: '1px solid #FDE68A' }}>
           <div style={{ fontSize: '12px', color: '#92400E', fontWeight: 600, marginBottom: '4px' }}>New</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#92400E' }}>{counts.new}</div>
         </div>
-        <div style={{ background: '#DBEAFE', borderRadius: '14px', padding: '14px 18px', border: '1px solid #BFDBFE' }}>
+        <div style={{ background: '#DBEAFE', borderRadius: '16px', padding: '16px 20px', border: '1px solid #BFDBFE' }}>
           <div style={{ fontSize: '12px', color: '#1E40AF', fontWeight: 600, marginBottom: '4px' }}>Contacted</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#1E40AF' }}>{counts.contacted}</div>
         </div>
-        <div style={{ background: '#E0E7FF', borderRadius: '14px', padding: '14px 18px', border: '1px solid #C7D2FE' }}>
+        <div style={{ background: '#E0E7FF', borderRadius: '16px', padding: '16px 20px', border: '1px solid #C7D2FE' }}>
           <div style={{ fontSize: '12px', color: '#3730A3', fontWeight: 600, marginBottom: '4px' }}>In Discussion</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#3730A3' }}>{counts.inDiscussion}</div>
         </div>
-        <div style={{ background: '#D1FAE5', borderRadius: '14px', padding: '14px 18px', border: '1px solid #A7F3D0' }}>
+        <div style={{ background: '#D1FAE5', borderRadius: '16px', padding: '16px 20px', border: '1px solid #A7F3D0' }}>
           <div style={{ fontSize: '12px', color: '#065F46', fontWeight: 600, marginBottom: '4px' }}>Closed</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#065F46' }}>{counts.closed}</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div style={{ background: '#ffffff', borderRadius: '16px', padding: '14px 20px', border: '1px solid #e2e8f0', marginBottom: '20px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ position: 'relative', width: '340px', maxWidth: '100%' }}>
+      <div style={{ background: '#ffffff', borderRadius: '16px', padding: '16px 20px', border: '1px solid #e2e8f0', marginBottom: '20px', display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ position: 'relative', flex: '1', minWidth: '260px' }}>
           <FiSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
           <input
             type="text"
@@ -193,8 +193,7 @@ export default function AdminEmployerRequirements() {
               fontSize: '13px',
               outline: 'none',
               fontFamily: 'inherit',
-              background: '#f8fafc',
-              boxSizing: 'border-box'
+              background: '#f8fafc'
             }}
           />
         </div>
