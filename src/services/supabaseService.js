@@ -718,7 +718,10 @@ export const jobService = {
         body: { to, subject, html }
       });
       if (error) throw error;
-      return data;
+      // The Edge Function only returns 2xx after ZeptoMail accepts the send.
+      // ZeptoMail's response is nested and does not expose a top-level `id` or
+      // `messageId`, so normalize the transport success for the UI.
+      return { success: true, providerResponse: data };
     } catch (error) {
       console.error('sendDirectEmail error:', error);
       return { error: error.toString() };

@@ -359,7 +359,7 @@ export default function AdminEmailAutomation() {
     try {
       const htmlContent = generateHtmlBody();
       const result = await jobService.sendDirectEmail(toEmail, subject, htmlContent);
-      if (result.id || result.messageId) {
+      if (result.success) {
         
         // Update stages
         const newStage = isManager ? 'Manager Submit' : 'Client Submission';
@@ -377,7 +377,7 @@ export default function AdminEmailAutomation() {
           return c;
         }));
 
-        alert(`Email sent successfully via Brevo! Stage updated to "${newStage}".`);
+        alert(`Email sent successfully via ZeptoMail! Stage updated to "${newStage}".`);
       } else {
         alert('Failed: ' + (result.error || 'Unknown error'));
       }
