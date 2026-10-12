@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jobService } from '../../services/jobService.js';
+import CandidateRecommendations from '../../components/admin/CandidateRecommendations.jsx';
+import { matchingEnabled } from '../../services/candidateMatchingService.js';
 import { FiArrowLeft, FiMapPin, FiBriefcase, FiUser, FiClock, FiSearch, FiRefreshCw, FiFileText, FiDownload } from 'react-icons/fi';
 
 export default function AdminClientJobDetail() {
@@ -12,6 +14,14 @@ export default function AdminClientJobDetail() {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [candidateTab, setCandidateTab] = useState('tagged');
+
+  const reloadTagged = async () => {
+    const matches = await jobService.fetchShortlistedCandidatesByJob(jobCode);
+    const applicants = await jobService.fetchApplicantsByIds(matches.map(item => item.applicantId));
+    const applicantMap = new Map(applicants.map(applicant => [applicant.applicantId, applicant]));
+    setShortlistedForJob(matches.map(match => ({ ...match, ...(applicantMap.get(match.applicantId) || {}) })));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -285,7 +295,7 @@ export default function AdminClientJobDetail() {
               <span style={{ fontSize: '13px', color: '#94a3b8' }}>N/A</span>
             )}
           </div>
-          <div style={{ fontSize: '13px', color: '#3b82f6', marginTop: '8px', fontWeight: 600 }}>Matching Applicants {shortlistedForJob.length}</div>
+          <div style={{ fontSize: '13px', color: '#3b82f6', marginTop: '8px', fontWeight: 600 }}>Tagged Applicants {shortlistedForJob.length}</div>
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '0 0 24px 0' }} />
@@ -376,7 +386,17 @@ export default function AdminClientJobDetail() {
       </div>
 
       {/* ── Submissions Section with Pipeline Stepper ── */}
-      <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+      {matchingEnabled && job._uuid && <>
+        <div role="tablist" aria-label="Candidates" style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          {['tagged', 'recommended'].map(tab => <button key={tab} role="tab" aria-selected={candidateTab === tab}
+            onClick={() => setCandidateTab(tab)} style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid #cbd5e1',
+              background: candidateTab === tab ? '#2563eb' : '#fff', color: candidateTab === tab ? '#fff' : '#334155', cursor: 'pointer' }}>
+            {tab === 'tagged' ? `Tagged candidates (${shortlistedForJob.length})` : 'Recommended candidates'}
+          </button>)}
+        </div>
+        {candidateTab === 'recommended' && <CandidateRecommendations key={job._uuid} job={job} onTagged={reloadTagged} />}
+      </>}
+      {(!matchingEnabled || !job._uuid || candidateTab === 'tagged') && <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>Submissions</h2>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -631,7 +651,7 @@ export default function AdminClientJobDetail() {
         <div style={{ padding: '14px 16px', fontSize: '12px', color: '#94a3b8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Showing 1 to {shortlistedForJob.length} of {shortlistedForJob.length} entries</span>
         </div>
-      </div>
+      </div>}
 
     </div>
   );

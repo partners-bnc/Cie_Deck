@@ -1,0 +1,3515 @@
+{
+  "date_utc": "2026-10-10",
+  "project_id": "bvvqyjqokvnttbgyjkrt",
+  "applicants": 88003,
+  "database_timeout_ms": 8000,
+  "cache_flushed": false,
+  "first_request_is_controlled_cold": false,
+  "pool_size": 50,
+  "compute_changed": false,
+  "compute_sku_verified": false,
+  "worker_version": 11,
+  "api_version": 5,
+  "tests": {
+    "node": 31,
+    "deno": 7
+  },
+  "integrity": [
+    {
+      "projected": 88003,
+      "indexed": 88003,
+      "mismatches": 0,
+      "remaining_benchmark_jobs": 0
+    }
+  ],
+  "summary": [
+    {
+      "name": "JPC053",
+      "role": "postgres",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 4830.329,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 1070.563,
+      "p95_ms": 1099.707,
+      "max_ms": 2079.99
+    },
+    {
+      "name": "JPC054",
+      "role": "postgres",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 7142.688,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 1591.941,
+      "p95_ms": 1879.208,
+      "max_ms": 5601.369
+    },
+    {
+      "name": "accounting_saved",
+      "role": "postgres",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 8624.715,
+        "code": "57014"
+      },
+      "median_ms": 2858.493,
+      "p95_ms": 3263.84,
+      "max_ms": 4148.256
+    },
+    {
+      "name": "cyber_saved",
+      "role": "postgres",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 3010.085,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 285.935,
+      "p95_ms": 314.088,
+      "max_ms": 316.003
+    },
+    {
+      "name": "audit_saved",
+      "role": "postgres",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 3904.236,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 610.742,
+      "p95_ms": 650.656,
+      "max_ms": 687.466
+    },
+    {
+      "name": "unrestricted",
+      "role": "service_role",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 7330.183,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 4876.839,
+      "p95_ms": 5190.746,
+      "max_ms": 5366.337
+    },
+    {
+      "name": "ten_years",
+      "role": "service_role",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 3664.979,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 2359.871,
+      "p95_ms": 2588.62,
+      "max_ms": 2678.928
+    },
+    {
+      "name": "location_notice",
+      "role": "service_role",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 4800.711,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 1068.515,
+      "p95_ms": 1165.136,
+      "max_ms": 1346.269
+    },
+    {
+      "name": "unknowns",
+      "role": "service_role",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 7253.433,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 306.595,
+      "p95_ms": 475.313,
+      "max_ms": 1255.605
+    },
+    {
+      "name": "empty",
+      "role": "service_role",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 10.386,
+        "code": null,
+        "count": 0,
+        "unique_count": 0
+      },
+      "median_ms": 1.816,
+      "p95_ms": 9.308,
+      "max_ms": 9.487
+    },
+    {
+      "name": "punctuation",
+      "role": "service_role",
+      "requests": 30,
+      "timeouts": 0,
+      "first": {
+        "ms": 95.356,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "median_ms": 10.383,
+      "p95_ms": 22.308,
+      "max_ms": 25.72
+    }
+  ],
+  "samples": [
+    {
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "name": "JPC053",
+      "years": "null",
+      "locations": "array['gurgaon']",
+      "notice": "null",
+      "first": {
+        "ms": 4830.329,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 1086.706,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1063.251,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1050.593,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1053.895,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1051.157,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1097.303,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1063.086,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1086.831,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1062.516,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1066.369,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1096.567,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1054.727,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1070.976,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1063.858,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1066.022,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1099.707,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1060.22,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1072.895,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1066.845,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2079.99,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1096.796,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1068.135,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1079.654,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1078.277,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1072.955,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1099.018,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1068.092,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1070.648,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1070.563,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1070.969,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "role": "postgres"
+    },
+    {
+      "id": "1f072e15-f392-47ec-b7bc-d3b16c2b63cc",
+      "name": "JPC054",
+      "years": "10",
+      "locations": "'{}'::text[]",
+      "notice": "null",
+      "first": {
+        "ms": 7142.688,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 5601.369,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1616.432,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1606.986,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1591.941,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1595.706,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1617.642,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1538.318,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1558.487,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1879.208,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1673.37,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1606.544,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1567.196,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1551.741,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1540.815,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1564.686,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1601.087,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1574.435,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1588.94,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1580.706,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1627.367,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1608.029,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1564.704,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1549.016,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1760.286,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1562.58,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1578.608,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1545.114,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1595.337,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1617.813,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1625.718,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "role": "postgres"
+    },
+    {
+      "id": "eb8ee07a-e520-4d0e-9064-24eaa0b52358",
+      "name": "accounting_saved",
+      "years": "1.5",
+      "locations": "'{}'::text[]",
+      "notice": "null",
+      "first": {
+        "ms": 8624.715,
+        "code": "57014"
+      },
+      "samples": [
+        {
+          "ms": 4148.256,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2592.768,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2645.178,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2634.928,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2600.586,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2636.155,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2611.744,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 3072.642,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2908.957,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2858.563,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2867.159,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2869.564,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2892.065,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2860.493,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2858.493,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2923.81,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2853.001,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2887.453,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2900.336,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2876.283,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2938.264,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2887.343,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 3263.84,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2681.344,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2628.297,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2691.238,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2624.185,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2630.004,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2622.669,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2606.263,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "role": "postgres"
+    },
+    {
+      "id": "b67869c4-41d7-48b3-a58e-e09c6f4e2447",
+      "name": "cyber_saved",
+      "years": "10",
+      "locations": "array['jeddah','riyadh']",
+      "notice": "null",
+      "first": {
+        "ms": 3010.085,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 314.088,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 286.568,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 284.814,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 283.715,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.575,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 306.919,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 280.219,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 281.698,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 283.038,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 279.322,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 310.062,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 283.372,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 287.206,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.935,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 283.279,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 316.003,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 286.805,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 286.224,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 287.512,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.922,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 309.721,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.989,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 291.106,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 292.801,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 286.179,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 306.647,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 284.782,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.802,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 282.4,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 280.055,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "role": "postgres"
+    },
+    {
+      "id": "19e89daa-a314-43d5-bd02-caf3e10cfd98",
+      "name": "audit_saved",
+      "years": "null",
+      "locations": "array['gurgaon']",
+      "notice": "null",
+      "first": {
+        "ms": 3904.236,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 687.466,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 612.959,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 606.121,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 605.023,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 609.444,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 646.33,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 609.381,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 613.222,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 612.26,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 610.518,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 650.656,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 619.368,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 612.045,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 609.466,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 612.529,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 634.144,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 611.446,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 605.454,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 604.451,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 606.644,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 640.804,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 611.547,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 604.361,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 605.746,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 613.355,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 634.152,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 610.742,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 604.669,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 608.085,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 609.763,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "role": "postgres"
+    },
+    {
+      "name": "unrestricted",
+      "args": "null,'{}',null,'hybrid'",
+      "first": {
+        "ms": 7330.183,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 5090.807,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4880.752,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4890.546,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 5366.337,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4970.1,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4899.691,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4842.762,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4839.393,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4848.744,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4859.169,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4947.255,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4831.09,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4838.654,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 5190.746,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4899.697,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4924.771,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4855.876,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4845.819,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4927.679,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4949.123,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4966.407,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4876.839,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4835.865,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4862.29,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 5129.013,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4884.073,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4834.079,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4816.382,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4825.161,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 4838.22,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "role": "service_role"
+    },
+    {
+      "name": "ten_years",
+      "args": "10,'{}',null,'hybrid'",
+      "first": {
+        "ms": 3664.979,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 2445.371,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2359.871,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2371.266,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2365.087,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2357.634,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2429.426,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2325.997,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2307.936,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2306.329,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2304.575,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2337.814,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2326.501,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2327.791,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2323.114,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2321.923,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2503.269,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2409.962,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2465.799,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2473.642,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2459.142,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2678.928,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2586.146,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2581.152,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2588.62,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2586.359,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2384.126,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2307.443,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2307.63,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2301.671,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 2311.636,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "role": "service_role"
+    },
+    {
+      "name": "location_notice",
+      "args": "null,array['gurgaon'],0,'hybrid'",
+      "first": {
+        "ms": 4800.711,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 1078.964,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1049.568,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1052.859,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1057.634,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1060.534,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1137.94,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1058.97,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1063.84,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1116.184,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1061.294,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1165.136,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1127.025,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1143.364,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1135.881,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1132.225,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1346.269,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1069.506,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1065.657,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1069.325,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1067.268,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1085.119,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1061.908,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1064.923,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1068.974,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1067.568,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1086.789,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1054.086,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1084.55,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1068.515,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 1061.491,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "role": "service_role"
+    },
+    {
+      "name": "unknowns",
+      "args": "100,array['__benchmark_no_known_location__'],0,'hybrid'",
+      "first": {
+        "ms": 7253.433,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 1255.605,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 288.538,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 330.605,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 303.114,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 290.963,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 314.735,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 288.667,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.18,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.988,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 290.233,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 367.632,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 334.197,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 327.198,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 330.471,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 333.052,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 475.313,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 306.83,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 299.934,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 294.111,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 290.658,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 348.101,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 314.804,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 312.472,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 315.141,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 306.595,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 313.039,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 291.908,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 285.715,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 287.181,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 284.92,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "role": "service_role"
+    },
+    {
+      "name": "empty",
+      "args": "null,'{}',null,'keyword',array['__no_matching_lexeme_10oct2026__']",
+      "first": {
+        "ms": 10.386,
+        "code": null,
+        "count": 0,
+        "unique_count": 0
+      },
+      "samples": [
+        {
+          "ms": 8.059,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.836,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.627,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.631,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.569,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 8.197,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.836,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.643,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.648,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.688,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 9.487,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 2.154,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.948,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.839,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.821,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 8.276,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.883,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.666,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.578,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.571,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 8.215,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.851,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.714,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.628,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.588,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 9.308,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 2.063,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.81,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.816,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        },
+        {
+          "ms": 1.723,
+          "code": null,
+          "count": 0,
+          "unique_count": 0
+        }
+      ],
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "role": "service_role"
+    },
+    {
+      "name": "punctuation",
+      "args": "null,'{}',null,'keyword',array['C++','.NET']",
+      "first": {
+        "ms": 95.356,
+        "code": null,
+        "count": 50,
+        "unique_count": 50
+      },
+      "samples": [
+        {
+          "ms": 20.735,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.356,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.332,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.032,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 9.931,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 20.771,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.175,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.163,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.035,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.12,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 20.841,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.696,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.383,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.164,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.061,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 22.308,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.567,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.975,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 11.503,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.781,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 25.72,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 11.79,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 11.253,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 11.347,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.756,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 21.011,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.096,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.054,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.02,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        },
+        {
+          "ms": 10.244,
+          "code": null,
+          "count": 50,
+          "unique_count": 50
+        }
+      ],
+      "id": "7043b969-f2f6-4ce7-b5cf-7e3593945359",
+      "role": "service_role"
+    }
+  ],
+  "recall": [
+    {
+      "name": "JPC053",
+      "overlap": 20,
+      "exact_count": 20,
+      "approximate_count": 20,
+      "recall": 1
+    },
+    {
+      "name": "JPC054",
+      "overlap": 20,
+      "exact_count": 20,
+      "approximate_count": 20,
+      "recall": 1
+    },
+    {
+      "name": "accounting_saved",
+      "overlap": 20,
+      "exact_count": 20,
+      "approximate_count": 20,
+      "recall": 1
+    },
+    {
+      "name": "cyber_saved",
+      "overlap": 20,
+      "exact_count": 20,
+      "approximate_count": 20,
+      "recall": 1
+    },
+    {
+      "name": "audit_saved",
+      "overlap": 20,
+      "exact_count": 20,
+      "approximate_count": 20,
+      "recall": 1
+    }
+  ],
+  "concurrency": {
+    "peak_concurrent_backends": 5,
+    "scenario": "accounting_saved",
+    "timeouts": 5,
+    "elapsed_ms": [
+      8706.348,
+      8698.645,
+      8708.144,
+      8695.375,
+      8708.081
+    ],
+    "remaining_jobs": 0
+  },
+  "retries": {
+    "JPC053": {
+      "status": "completed",
+      "retrieval_ms": 7520,
+      "candidates": 50,
+      "recommendations": 20,
+      "final_ai_calls": 1,
+      "query_embedding_ms": 3,
+      "coverage_ms": 1677,
+      "matches_available_ms": 10059,
+      "successful_invocation_until_complete_ms": 13687
+    },
+    "JPC054": {
+      "status": "completed",
+      "retrieval_ms": 7951,
+      "candidates": 50,
+      "recommendations": 20,
+      "final_ai_calls": 1,
+      "retrieval_attempts": 2,
+      "first_attempt_code": "57014",
+      "matches_available_ms": 9267,
+      "coverage_ms": 1063
+    }
+  },
+  "index_stats": [
+    {
+      "schemaname": "matching_private",
+      "relname": "applicant_lexical",
+      "indexrelname": "applicant_lexical_ordered_keywords",
+      "idx_scan": 252,
+      "size": "41 MB"
+    },
+    {
+      "schemaname": "matching_private",
+      "relname": "applicant_lexical",
+      "indexrelname": "applicant_lexical_ordered_location",
+      "idx_scan": 850,
+      "size": "4296 kB"
+    },
+    {
+      "schemaname": "matching_private",
+      "relname": "applicant_lexical",
+      "indexrelname": "applicant_lexical_ordered_pkey",
+      "idx_scan": 88006,
+      "size": "3680 kB"
+    },
+    {
+      "schemaname": "public",
+      "relname": "applicant_search_index",
+      "indexrelname": "applicant_search_gurgaon_hnsw",
+      "idx_scan": 101,
+      "size": "20 MB"
+    },
+    {
+      "schemaname": "public",
+      "relname": "applicant_search_index",
+      "indexrelname": "applicant_search_hnsw",
+      "idx_scan": 224,
+      "size": "687 MB"
+    },
+    {
+      "schemaname": "public",
+      "relname": "applicant_search_index",
+      "indexrelname": "applicant_search_index_pkey",
+      "idx_scan": 1379075,
+      "size": "4784 kB"
+    },
+    {
+      "schemaname": "public",
+      "relname": "applicant_search_index",
+      "indexrelname": "applicant_search_keywords",
+      "idx_scan": 113,
+      "size": "40 MB"
+    },
+    {
+      "schemaname": "public",
+      "relname": "applicant_search_index",
+      "indexrelname": "applicant_search_unknown_location_hnsw",
+      "idx_scan": 193,
+      "size": "114 MB"
+    }
+  ],
+  "plans": {
+    "keyword": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Limit",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 557.63,
+              "Total Cost": 557.85,
+              "Plan Rows": 86,
+              "Plan Width": 20,
+              "Actual Startup Time": 1253.459,
+              "Actual Total Time": 1253.508,
+              "Actual Rows": 200,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 243,
+              "Shared Read Blocks": 4715,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Aggregate",
+                  "Strategy": "Plain",
+                  "Partial Mode": "Simple",
+                  "Parent Relationship": "InitPlan",
+                  "Subplan Name": "CTE q",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 31.38,
+                  "Total Cost": 31.39,
+                  "Plan Rows": 1,
+                  "Plan Width": 32,
+                  "Actual Startup Time": 6.575,
+                  "Actual Total Time": 6.578,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 2,
+                  "Shared Read Blocks": 16,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Nested Loop",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Join Type": "Inner",
+                      "Startup Cost": 0.14,
+                      "Total Cost": 4.38,
+                      "Plan Rows": 100,
+                      "Plan Width": 32,
+                      "Actual Startup Time": 0.061,
+                      "Actual Total Time": 0.075,
+                      "Actual Rows": 21,
+                      "Actual Loops": 1,
+                      "Inner Unique": false,
+                      "Shared Hit Blocks": 1,
+                      "Shared Read Blocks": 1,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Index Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Scan Direction": "Forward",
+                          "Index Name": "job_match_runs_pkey",
+                          "Relation Name": "job_match_runs",
+                          "Alias": "r",
+                          "Startup Cost": 0.13,
+                          "Total Cost": 2.37,
+                          "Plan Rows": 1,
+                          "Plan Width": 1095,
+                          "Actual Startup Time": 0.033,
+                          "Actual Total Time": 0.035,
+                          "Actual Rows": 1,
+                          "Actual Loops": 1,
+                          "Index Cond": "(id = '7043b969-f2f6-4ce7-b5cf-7e3593945359'::uuid)",
+                          "Rows Removed by Index Recheck": 0,
+                          "Shared Hit Blocks": 1,
+                          "Shared Read Blocks": 1,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        },
+                        {
+                          "Node Type": "Function Scan",
+                          "Parent Relationship": "Inner",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Function Name": "jsonb_array_elements_text",
+                          "Alias": "term",
+                          "Startup Cost": 0.01,
+                          "Total Cost": 1,
+                          "Plan Rows": 100,
+                          "Plan Width": 32,
+                          "Actual Startup Time": 0.026,
+                          "Actual Total Time": 0.031,
+                          "Actual Rows": 21,
+                          "Actual Loops": 1,
+                          "Shared Hit Blocks": 0,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Node Type": "CTE Scan",
+                  "Parent Relationship": "InitPlan",
+                  "Subplan Name": "InitPlan 2",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "CTE Name": "q",
+                  "Alias": "q",
+                  "Startup Cost": 0,
+                  "Total Cost": 0.02,
+                  "Plan Rows": 1,
+                  "Plan Width": 32,
+                  "Actual Startup Time": 0.008,
+                  "Actual Total Time": 0.008,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 0,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                {
+                  "Node Type": "CTE Scan",
+                  "Parent Relationship": "InitPlan",
+                  "Subplan Name": "InitPlan 3",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "CTE Name": "q",
+                  "Alias": "q_1",
+                  "Startup Cost": 0,
+                  "Total Cost": 0.02,
+                  "Plan Rows": 1,
+                  "Plan Width": 32,
+                  "Actual Startup Time": 6.583,
+                  "Actual Total Time": 6.584,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 2,
+                  "Shared Read Blocks": 16,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                {
+                  "Node Type": "Sort",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 526.2,
+                  "Total Cost": 526.41,
+                  "Plan Rows": 86,
+                  "Plan Width": 20,
+                  "Actual Startup Time": 1253.457,
+                  "Actual Total Time": 1253.483,
+                  "Actual Rows": 200,
+                  "Actual Loops": 1,
+                  "Sort Key": [
+                    "(ts_rank_cd(applicant_lexical.keywords, (InitPlan 2).col1)) DESC",
+                    "applicant_lexical.applicant_id"
+                  ],
+                  "Sort Method": "top-N heapsort",
+                  "Sort Space Used": 49,
+                  "Sort Space Type": "Memory",
+                  "Shared Hit Blocks": 243,
+                  "Shared Read Blocks": 4715,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Heap Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Relation Name": "applicant_lexical",
+                      "Alias": "applicant_lexical",
+                      "Startup Cost": 425.67,
+                      "Total Cost": 523.44,
+                      "Plan Rows": 86,
+                      "Plan Width": 20,
+                      "Actual Startup Time": 214.287,
+                      "Actual Total Time": 1247.05,
+                      "Actual Rows": 11998,
+                      "Actual Loops": 1,
+                      "Recheck Cond": "((keywords @@ (InitPlan 3).col1) AND ((location IS NULL) OR (location = 'gurgaon'::text)))",
+                      "Rows Removed by Index Recheck": 0,
+                      "Exact Heap Blocks": 4239,
+                      "Lossy Heap Blocks": 0,
+                      "Shared Hit Blocks": 237,
+                      "Shared Read Blocks": 4715,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "BitmapAnd",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Startup Cost": 425.67,
+                          "Total Cost": 425.67,
+                          "Plan Rows": 88,
+                          "Plan Width": 0,
+                          "Actual Startup Time": 211.981,
+                          "Actual Total Time": 211.982,
+                          "Actual Rows": 0,
+                          "Actual Loops": 1,
+                          "Shared Hit Blocks": 127,
+                          "Shared Read Blocks": 423,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0,
+                          "Plans": [
+                            {
+                              "Node Type": "Bitmap Index Scan",
+                              "Parent Relationship": "Member",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "Index Name": "applicant_lexical_ordered_keywords",
+                              "Startup Cost": 0,
+                              "Total Cost": 173.74,
+                              "Plan Rows": 440,
+                              "Plan Width": 0,
+                              "Actual Startup Time": 203.59,
+                              "Actual Total Time": 203.59,
+                              "Actual Rows": 60702,
+                              "Actual Loops": 1,
+                              "Index Cond": "(keywords @@ (InitPlan 3).col1)",
+                              "Shared Hit Blocks": 125,
+                              "Shared Read Blocks": 335,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0
+                            },
+                            {
+                              "Node Type": "BitmapOr",
+                              "Parent Relationship": "Member",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "Startup Cost": 251.66,
+                              "Total Cost": 251.66,
+                              "Plan Rows": 17598,
+                              "Plan Width": 0,
+                              "Actual Startup Time": 7.499,
+                              "Actual Total Time": 7.5,
+                              "Actual Rows": 0,
+                              "Actual Loops": 1,
+                              "Shared Hit Blocks": 2,
+                              "Shared Read Blocks": 88,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0,
+                              "Plans": [
+                                {
+                                  "Node Type": "Bitmap Index Scan",
+                                  "Parent Relationship": "Member",
+                                  "Parallel Aware": false,
+                                  "Async Capable": false,
+                                  "Index Name": "applicant_lexical_ordered_location",
+                                  "Startup Cost": 0,
+                                  "Total Cost": 213.95,
+                                  "Plan Rows": 14978,
+                                  "Plan Width": 0,
+                                  "Actual Startup Time": 4.439,
+                                  "Actual Total Time": 4.439,
+                                  "Actual Rows": 14651,
+                                  "Actual Loops": 1,
+                                  "Index Cond": "(location IS NULL)",
+                                  "Shared Hit Blocks": 1,
+                                  "Shared Read Blocks": 74,
+                                  "Shared Dirtied Blocks": 0,
+                                  "Shared Written Blocks": 0,
+                                  "Local Hit Blocks": 0,
+                                  "Local Read Blocks": 0,
+                                  "Local Dirtied Blocks": 0,
+                                  "Local Written Blocks": 0,
+                                  "Temp Read Blocks": 0,
+                                  "Temp Written Blocks": 0
+                                },
+                                {
+                                  "Node Type": "Bitmap Index Scan",
+                                  "Parent Relationship": "Member",
+                                  "Parallel Aware": false,
+                                  "Async Capable": false,
+                                  "Index Name": "applicant_lexical_ordered_location",
+                                  "Startup Cost": 0,
+                                  "Total Cost": 37.67,
+                                  "Plan Rows": 2620,
+                                  "Plan Width": 0,
+                                  "Actual Startup Time": 3.057,
+                                  "Actual Total Time": 3.057,
+                                  "Actual Rows": 2607,
+                                  "Actual Loops": 1,
+                                  "Index Cond": "(location = 'gurgaon'::text)",
+                                  "Shared Hit Blocks": 1,
+                                  "Shared Read Blocks": 14,
+                                  "Shared Dirtied Blocks": 0,
+                                  "Shared Written Blocks": 0,
+                                  "Local Hit Blocks": 0,
+                                  "Local Read Blocks": 0,
+                                  "Local Dirtied Blocks": 0,
+                                  "Local Written Blocks": 0,
+                                  "Temp Read Blocks": 0,
+                                  "Temp Written Blocks": 0
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 266,
+              "Shared Read Blocks": 9,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 6.364,
+            "Triggers": [],
+            "Execution Time": 1254.004
+          }
+        ]
+      }
+    ],
+    "eligibility": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Aggregate",
+              "Strategy": "Plain",
+              "Partial Mode": "Simple",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 10000000667.83,
+              "Total Cost": 10000000667.84,
+              "Plan Rows": 1,
+              "Plan Width": 8,
+              "Actual Startup Time": 8.758,
+              "Actual Total Time": 8.759,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 114,
+              "Shared Read Blocks": 382,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Limit",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 10000000000,
+                  "Total Cost": 10000000655.31,
+                  "Plan Rows": 1001,
+                  "Plan Width": 4,
+                  "Actual Startup Time": 0.549,
+                  "Actual Total Time": 8.673,
+                  "Actual Rows": 1001,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 114,
+                  "Shared Read Blocks": 382,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Relation Name": "applicant_lexical",
+                      "Alias": "applicant_lexical",
+                      "Startup Cost": 10000000000,
+                      "Total Cost": 10000022005.04,
+                      "Plan Rows": 33613,
+                      "Plan Width": 4,
+                      "Actual Startup Time": 0.547,
+                      "Actual Total Time": 8.567,
+                      "Actual Rows": 1001,
+                      "Actual Loops": 1,
+                      "Filter": "((max_years IS NULL) OR (max_years >= '10'::numeric))",
+                      "Rows Removed by Filter": 991,
+                      "Shared Hit Blocks": 114,
+                      "Shared Read Blocks": 382,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 101,
+              "Shared Read Blocks": 3,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 2.688,
+            "Triggers": [],
+            "Execution Time": 8.864
+          }
+        ]
+      }
+    ],
+    "semantic": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Limit",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 1500.25,
+              "Total Cost": 3089.96,
+              "Plan Rows": 400,
+              "Plan Width": 24,
+              "Actual Startup Time": 667.771,
+              "Actual Total Time": 2952.241,
+              "Actual Rows": 400,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 1873,
+              "Shared Read Blocks": 4907,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Index Scan",
+                  "Parent Relationship": "InitPlan",
+                  "Subplan Name": "InitPlan 1",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "job_match_runs_pkey",
+                  "Relation Name": "job_match_runs",
+                  "Alias": "job_match_runs",
+                  "Startup Cost": 0.13,
+                  "Total Cost": 2.37,
+                  "Plan Rows": 1,
+                  "Plan Width": 32,
+                  "Actual Startup Time": 2.94,
+                  "Actual Total Time": 2.942,
+                  "Actual Rows": 1,
+                  "Actual Loops": 1,
+                  "Index Cond": "(id = '1f072e15-f392-47ec-b7bc-d3b16c2b63cc'::uuid)",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 29,
+                  "Shared Read Blocks": 6,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                },
+                {
+                  "Node Type": "Index Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "applicant_search_hnsw",
+                  "Relation Name": "applicant_search_index",
+                  "Alias": "applicant_search_index",
+                  "Startup Cost": 1497.88,
+                  "Total Cost": 119239.57,
+                  "Plan Rows": 29626,
+                  "Plan Width": 24,
+                  "Actual Startup Time": 667.769,
+                  "Actual Total Time": 2951.92,
+                  "Actual Rows": 400,
+                  "Actual Loops": 1,
+                  "Order By": "((embedding)::halfvec(3072) <=> (InitPlan 1).col1)",
+                  "Filter": "(((attributes #>> '{experience,max}'::text[]) IS NULL) OR (((attributes #>> '{experience,max}'::text[]))::numeric >= '10'::numeric))",
+                  "Rows Removed by Filter": 96,
+                  "Shared Hit Blocks": 1873,
+                  "Shared Read Blocks": 4907,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 240,
+              "Shared Read Blocks": 3,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 3.381,
+            "Triggers": [],
+            "Execution Time": 2952.803
+          }
+        ]
+      }
+    ],
+    "fusion": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Nested Loop",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Join Type": "Inner",
+              "Startup Cost": 49.2,
+              "Total Cost": 178.46,
+              "Plan Rows": 50,
+              "Plan Width": 81,
+              "Actual Startup Time": 5.315,
+              "Actual Total Time": 8.95,
+              "Actual Rows": 50,
+              "Actual Loops": 1,
+              "Inner Unique": true,
+              "Shared Hit Blocks": 212,
+              "Shared Read Blocks": 17,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Limit",
+                  "Parent Relationship": "InitPlan",
+                  "Subplan Name": "CTE s",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 0.48,
+                  "Total Cost": 12.69,
+                  "Plan Rows": 200,
+                  "Plan Width": 24,
+                  "Actual Startup Time": 0.085,
+                  "Actual Total Time": 1.364,
+                  "Actual Rows": 200,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 2,
+                  "Shared Read Blocks": 4,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "WindowAgg",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 0.48,
+                      "Total Cost": 5375.87,
+                      "Plan Rows": 88003,
+                      "Plan Width": 24,
+                      "Actual Startup Time": 0.084,
+                      "Actual Total Time": 1.343,
+                      "Actual Rows": 200,
+                      "Actual Loops": 1,
+                      "Shared Hit Blocks": 2,
+                      "Shared Read Blocks": 4,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Index Only Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Scan Direction": "Forward",
+                          "Index Name": "applicant_lexical_ordered_pkey",
+                          "Relation Name": "applicant_lexical",
+                          "Alias": "applicant_lexical",
+                          "Startup Cost": 0.42,
+                          "Total Cost": 4055.83,
+                          "Plan Rows": 88003,
+                          "Plan Width": 16,
+                          "Actual Startup Time": 0.079,
+                          "Actual Total Time": 1.273,
+                          "Actual Rows": 200,
+                          "Actual Loops": 1,
+                          "Heap Fetches": 1,
+                          "Shared Hit Blocks": 2,
+                          "Shared Read Blocks": 4,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Node Type": "Limit",
+                  "Parent Relationship": "InitPlan",
+                  "Subplan Name": "CTE l",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 0.48,
+                  "Total Cost": 12.69,
+                  "Plan Rows": 200,
+                  "Plan Width": 24,
+                  "Actual Startup Time": 1.342,
+                  "Actual Total Time": 1.555,
+                  "Actual Rows": 200,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 15,
+                  "Shared Read Blocks": 2,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "WindowAgg",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 0.48,
+                      "Total Cost": 5375.87,
+                      "Plan Rows": 88003,
+                      "Plan Width": 24,
+                      "Actual Startup Time": 1.341,
+                      "Actual Total Time": 1.534,
+                      "Actual Rows": 200,
+                      "Actual Loops": 1,
+                      "Shared Hit Blocks": 15,
+                      "Shared Read Blocks": 2,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Index Only Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Scan Direction": "Backward",
+                          "Index Name": "applicant_lexical_ordered_pkey",
+                          "Relation Name": "applicant_lexical",
+                          "Alias": "applicant_lexical_1",
+                          "Startup Cost": 0.42,
+                          "Total Cost": 4055.83,
+                          "Plan Rows": 88003,
+                          "Plan Width": 16,
+                          "Actual Startup Time": 1.332,
+                          "Actual Total Time": 1.463,
+                          "Actual Rows": 200,
+                          "Actual Loops": 1,
+                          "Heap Fetches": 32,
+                          "Shared Hit Blocks": 15,
+                          "Shared Read Blocks": 2,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Node Type": "Limit",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 23.39,
+                  "Total Cost": 23.52,
+                  "Plan Rows": 50,
+                  "Plan Width": 48,
+                  "Actual Startup Time": 3.459,
+                  "Actual Total Time": 3.478,
+                  "Actual Rows": 50,
+                  "Actual Loops": 1,
+                  "Shared Hit Blocks": 23,
+                  "Shared Read Blocks": 6,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Sort",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 23.39,
+                      "Total Cost": 23.89,
+                      "Plan Rows": 200,
+                      "Plan Width": 48,
+                      "Actual Startup Time": 3.458,
+                      "Actual Total Time": 3.47,
+                      "Actual Rows": 50,
+                      "Actual Loops": 1,
+                      "Sort Key": [
+                        "((COALESCE((1.0 / ((60 + s.\"position\"))::numeric), '0'::numeric) + COALESCE((1.0 / ((60 + l.\"position\"))::numeric), '0'::numeric))) DESC",
+                        "(COALESCE(s.applicant_id, l.applicant_id))"
+                      ],
+                      "Sort Method": "top-N heapsort",
+                      "Sort Space Used": 28,
+                      "Sort Space Type": "Memory",
+                      "Shared Hit Blocks": 23,
+                      "Shared Read Blocks": 6,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Hash Join",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Join Type": "Full",
+                          "Startup Cost": 6.5,
+                          "Total Cost": 16.75,
+                          "Plan Rows": 200,
+                          "Plan Width": 48,
+                          "Actual Startup Time": 1.756,
+                          "Actual Total Time": 3.302,
+                          "Actual Rows": 400,
+                          "Actual Loops": 1,
+                          "Inner Unique": false,
+                          "Hash Cond": "(s.applicant_id = l.applicant_id)",
+                          "Shared Hit Blocks": 17,
+                          "Shared Read Blocks": 6,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0,
+                          "Plans": [
+                            {
+                              "Node Type": "CTE Scan",
+                              "Parent Relationship": "Outer",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "CTE Name": "s",
+                              "Alias": "s",
+                              "Startup Cost": 0,
+                              "Total Cost": 4,
+                              "Plan Rows": 200,
+                              "Plan Width": 24,
+                              "Actual Startup Time": 0.086,
+                              "Actual Total Time": 1.426,
+                              "Actual Rows": 200,
+                              "Actual Loops": 1,
+                              "Shared Hit Blocks": 2,
+                              "Shared Read Blocks": 4,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0
+                            },
+                            {
+                              "Node Type": "Hash",
+                              "Parent Relationship": "Inner",
+                              "Parallel Aware": false,
+                              "Async Capable": false,
+                              "Startup Cost": 4,
+                              "Total Cost": 4,
+                              "Plan Rows": 200,
+                              "Plan Width": 24,
+                              "Actual Startup Time": 1.65,
+                              "Actual Total Time": 1.651,
+                              "Actual Rows": 200,
+                              "Actual Loops": 1,
+                              "Hash Buckets": 1024,
+                              "Original Hash Buckets": 1024,
+                              "Hash Batches": 1,
+                              "Original Hash Batches": 1,
+                              "Peak Memory Usage": 19,
+                              "Shared Hit Blocks": 15,
+                              "Shared Read Blocks": 2,
+                              "Shared Dirtied Blocks": 0,
+                              "Shared Written Blocks": 0,
+                              "Local Hit Blocks": 0,
+                              "Local Read Blocks": 0,
+                              "Local Dirtied Blocks": 0,
+                              "Local Written Blocks": 0,
+                              "Temp Read Blocks": 0,
+                              "Temp Written Blocks": 0,
+                              "Plans": [
+                                {
+                                  "Node Type": "CTE Scan",
+                                  "Parent Relationship": "Outer",
+                                  "Parallel Aware": false,
+                                  "Async Capable": false,
+                                  "CTE Name": "l",
+                                  "Alias": "l",
+                                  "Startup Cost": 0,
+                                  "Total Cost": 4,
+                                  "Plan Rows": 200,
+                                  "Plan Width": 24,
+                                  "Actual Startup Time": 1.344,
+                                  "Actual Total Time": 1.61,
+                                  "Actual Rows": 200,
+                                  "Actual Loops": 1,
+                                  "Shared Hit Blocks": 15,
+                                  "Shared Read Blocks": 2,
+                                  "Shared Dirtied Blocks": 0,
+                                  "Shared Written Blocks": 0,
+                                  "Local Hit Blocks": 0,
+                                  "Local Read Blocks": 0,
+                                  "Local Dirtied Blocks": 0,
+                                  "Local Written Blocks": 0,
+                                  "Temp Read Blocks": 0,
+                                  "Temp Written Blocks": 0
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Node Type": "Index Scan",
+                  "Parent Relationship": "Inner",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Scan Direction": "Forward",
+                  "Index Name": "applicant_search_index_pkey",
+                  "Relation Name": "applicant_search_index",
+                  "Alias": "i",
+                  "Startup Cost": 0.42,
+                  "Total Cost": 2.59,
+                  "Plan Rows": 1,
+                  "Plan Width": 49,
+                  "Actual Startup Time": 0.108,
+                  "Actual Total Time": 0.108,
+                  "Actual Rows": 1,
+                  "Actual Loops": 50,
+                  "Index Cond": "(applicant_id = (COALESCE(s.applicant_id, l.applicant_id)))",
+                  "Rows Removed by Index Recheck": 0,
+                  "Shared Hit Blocks": 189,
+                  "Shared Read Blocks": 11,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 271,
+              "Shared Read Blocks": 3,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 3.898,
+            "Triggers": [],
+            "Execution Time": 9.153
+          }
+        ]
+      }
+    ]
+  },
+  "fusion_probe": "Isolated reciprocal-rank fusion with two fixed 200-row ID inputs; not a complete job retrieval.",
+  "remaining_acceptance": [
+    "One accounting first request timed out",
+    "Five concurrent broad accounting searches timed out",
+    "Warm subsecond target not met for broad searches",
+    "First ten newly created production runs still require monitoring"
+  ],
+  "frontend": "Source/build updated locally; no separate frontend-host deployment performed."
+}

@@ -1,0 +1,11 @@
+project_id = "cie-deck"
+
+# Each endpoint implements its own server-side authorization. Supports current publishable keys.
+[functions.candidate-matching]
+verify_jwt = false
+
+[functions.applicant-embedding-worker]
+verify_jwt = false
+
+[functions.candidate-match-worker]
+verify_jwt = false

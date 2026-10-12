@@ -49,3 +49,6 @@ Dockerfile.resume-queue-worker
 scripts/
 .vercel
 .env*
+supabase/.temp/
+.matching-backfill.json
+.cache/

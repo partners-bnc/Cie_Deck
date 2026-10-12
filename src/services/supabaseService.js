@@ -2,7 +2,7 @@ import { supabase, SUPABASE_URL } from './supabaseClient.js';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const SUPABASE_PAGE_SIZE = 1000;
-const CACHE_PREFIX = 'bnc_job_cache_v5';
+const CACHE_PREFIX = 'bnc_job_cache_v6';
 const inflightRequests = new Map();
 const cache = {
   jobs: { data: null, timestamp: 0 },
@@ -357,6 +357,7 @@ function mapClientRow(c) {
 
 function mapClientJobRow(j) {
   return {
+    _uuid: j.id,
     jobCode: j.job_code || '',
     jobTitle: j.job_title || '',
     jobType: j.job_type || '',
@@ -1691,7 +1692,7 @@ export const jobService = {
     try {
       return await withCache('clientJobs', async () => {
         const { data, error } = await supabase.from('client_jobs')
-          .select('job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, job_description, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact')
+          .select('id, job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, job_description, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact')
           .order('created_on', { ascending: false });
 
         if (error) throw error;
@@ -1713,7 +1714,7 @@ export const jobService = {
     try {
       let query = supabase
         .from('client_jobs')
-        .select('job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact', { count: 'exact' });
+        .select('id, job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact', { count: 'exact' });
 
       const searchFilter = buildIlikeOrFilter(
         ['job_code', 'job_title', 'job_type', 'job_mode', 'client_name', 'recruitment_manager', 'location', 'state', 'country'],
@@ -1746,13 +1747,13 @@ export const jobService = {
     try {
       const cachedJobs = readCacheEntry('clientJobs');
       const cachedJob = cachedJobs?.find((job) => job.jobCode === jobCode);
-      if (cachedJob?.jobDescription) {
+      if (cachedJob?.jobDescription && cachedJob._uuid) {
         return cachedJob;
       }
 
       const { data, error } = await supabase
         .from('client_jobs')
-        .select('job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, job_description, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact')
+        .select('id, job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, job_description, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact')
         .eq('job_code', jobCode)
         .maybeSingle();
 
