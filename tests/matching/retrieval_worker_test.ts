@@ -6,17 +6,17 @@ Deno.test('timeout deliveries reuse the persisted vector and never call final AI
   let handler: (r: Request)=>Promise<Response>;
   let cached: string|null=null, searches=0, embeddings=0, finalCalls=0, attempts=0, failed=false;
   const run={id:'33333333-3333-4333-8333-333333333333',claim_token:'claim',job_hash:'hash',
-    config_version:MATCHING_VERSION,groq_model:'fixture',phase:'retrieval',
+    config_version:MATCHING_VERSION,groq_model:'gpt-5-nano',phase:'retrieval',
     requirements:{mandatory:['Kubernetes'],preferred:[],keywords:['Kubernetes'],conflicts:[]}};
   Deno.env.set('SUPABASE_URL','https://fixture.supabase.co'); Deno.env.set('SUPABASE_SERVICE_ROLE_KEY','fixture');
-  Deno.env.set('MATCH_WORKER_SECRET','a'.repeat(64)); Deno.env.set('GROQ_MODEL','fixture'); Deno.env.set('OPENAI_API_KEY','fixture');
+  Deno.env.set('MATCH_WORKER_SECRET','a'.repeat(64));  Deno.env.set('OPENAI_API_KEY','fixture');
   try {
     Deno.serve=((fn:typeof handler)=>{handler=fn;return {} as Deno.HttpServer;}) as typeof Deno.serve;
     globalThis.fetch=async(input,init)=>{
       const url=String(input),op=new URL(url).pathname.split('/').at(-1);
       const args=JSON.parse(String(init?.body||'{}'));
-      if(url.includes('openai.com')) { embeddings++; return Response.json({data:[{embedding:Array.from({length:3072},(_,i)=>i?0.01:1)}]}); }
-      if(url.includes('groq.com')) { finalCalls++; throw new Error('Unexpected final AI'); }
+      if(url.includes('/v1/embeddings')) { embeddings++; return Response.json({data:[{embedding:Array.from({length:3072},(_,i)=>i?0.01:1)}]}); }
+      if(url.includes('/v1/chat/completions')) { finalCalls++; throw new Error('Unexpected final AI'); }
       if(op==='matching_claim_batch_run') return Response.json(failed?null:{...run,attempts:++attempts,query_embedding:cached});
       if(op==='matching_run_context') return Response.json({current_job_hash:'hash'});
       if(op==='matching_save_query_embedding') {cached=args.p_vector;return Response.json(true);}

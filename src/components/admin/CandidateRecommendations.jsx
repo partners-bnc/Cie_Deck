@@ -1,5 +1,5 @@
-import { createElement, useCallback, useEffect, useId, useState } from 'react';
-import { FiUsers, FiSearch, FiRefreshCw, FiDatabase, FiInfo, FiChevronDown } from 'react-icons/fi';
+import { createElement, useCallback, useEffect, useState } from 'react';
+import { FiUsers, FiSearch, FiRefreshCw, FiDatabase } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { candidateMatchingService } from '../../services/candidateMatchingService.js';
 import { jobService } from '../../services/jobService.js';
@@ -7,27 +7,9 @@ import { jobService } from '../../services/jobService.js';
 const panel = { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24, marginBottom: 24, fontFamily: 'inherit', fontSize: 13 };
 const button = { padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600 };
 const cell = { padding: '14px 16px', fontSize: 13, color: '#374151' };
+const SCORING_VERSION = 'matching-all-scored-v5';
 const running = status => ['extracting', 'queued', 'running'].includes(status);
 const icon = (component, size = 16, style = {}) => createElement(component, { size, 'aria-hidden': true, focusable: false, style: { flexShrink: 0, ...style } });
-
-export function InterpretationNotes({ warnings }) {
-  const [expanded, setExpanded] = useState(false);
-  const id = useId();
-  if (!warnings?.length) return null;
-  return <div style={{ margin: '16px 0', border: '1px solid #e2e8f0', borderRadius: 10, overflow: 'hidden' }}>
-    <button type="button" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(!expanded)}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '12px 14px', background: '#f8fafc', border: 0, color: '#475569', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, textAlign: 'left', cursor: 'pointer' }}>
-      {icon(FiInfo)}<span>Job interpretation notes</span>
-      <span style={{ borderRadius: 12, background: '#e2e8f0', padding: '1px 7px', fontSize: 11 }}>{warnings.length}</span>
-      {icon(FiChevronDown, 16, { marginLeft: 'auto', transform: expanded ? 'rotate(180deg)' : undefined })}
-    </button>
-    <div id={id} hidden={!expanded}>
-      {expanded && <ul style={{ margin: 0, padding: '12px 18px 12px 32px', borderTop: '1px solid #e2e8f0', color: '#92400e', fontSize: 13, lineHeight: 1.7 }}>
-        {warnings.map((warning, i) => <li key={i}>{warning}</li>)}
-      </ul>}
-    </div>
-  </div>;
-}
 
 export function CandidateTable({ children }) {
   return <div style={{ background: '#fff', borderRadius: 18, border: '1px solid #e8ecf0', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
@@ -61,7 +43,7 @@ export function CandidateRow({ result, expanded, onToggle, onView, onTag, taggin
       <td style={{ ...cell, fontSize: 12 }}>{applicant.notice_period || '—'}</td>
       <td style={cell}>{final ? <span aria-label={`Relevance ${result.score} out of 100`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', fontSize: 13, fontWeight: 700,
         color: result.score >= 80 ? '#15803d' : result.score >= 60 ? '#0369a1' : '#b45309', background: result.score >= 80 ? '#dcfce7' : result.score >= 60 ? '#e0f2fe' : '#fef3c7' }}>{result.score}</span>
-        : <span style={{ color: '#9ca3af', fontSize: 11 }}>Pending</span>}</td>
+        : <span style={{ color: '#9ca3af', fontSize: 11 }}>{running(run?.status) ? 'Pending' : run?.status === 'completed' ? 'Not scored in this saved run' : 'AI scoring unavailable'}</span>}</td>
       <td style={cell}><div style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap' }}>
         <button style={button} onClick={onView}>View applicant</button>
         {final && <button style={button} disabled={result.alreadyTagged || run.is_stale || Boolean(tagging)} onClick={onTag}>
@@ -92,14 +74,14 @@ export function CandidateRow({ result, expanded, onToggle, onView, onTag, taggin
           <p style={{ color: '#333', fontSize: 13 }}>{assessment.analysis || assessment.reason || 'Analysis unavailable for this result.'}</p>
           {!assessment.analysis && <p style={{ color: '#64748b', fontSize: 13 }}>Detailed analysis unavailable for this saved result. Refresh recommendations to generate it.</p>}
           {assessment.evidence?.length > 0 && <div style={{ background: '#f0fdf4', borderLeft: '3px solid #16a34a', borderRadius: 8, padding: '10px 14px' }}>
-            <strong style={{ color: '#16a34a', fontSize: 11, textTransform: 'uppercase' }}>Supporting evidence</strong>
-            {assessment.evidence.map((ref, i) => <p key={i} style={{ margin: '4px 0', color: '#374151', fontSize: 12 }}>{ref.field.replaceAll('_', ' ')}: “{ref.quote}”</p>)}
+            <strong style={{ color: '#16a34a', fontSize: 11, textTransform: 'uppercase' }}>Supporting information</strong>
+            {assessment.evidence.map((ref, i) => <p key={i} style={{ margin: '4px 0', color: '#374151', fontSize: 12 }}>{ref.field.replaceAll('_', ' ')}: {ref.quote}</p>)}
           </div>}
           {assessment.gaps?.length > 0 && <p style={{ fontSize: 13 }}>Gaps to verify: {assessment.gaps.join('; ')}</p>}
           {assessment.unknowns?.length > 0 && <p style={{ fontSize: 13 }}>Unknown information: {assessment.unknowns.join('; ')}</p>}
           {assessment.requirements?.length > 0 && <ul>{assessment.requirements.map(item => <li key={item.index}>
             {[...(run.requirements?.mandatory || []), ...(run.requirements?.preferred || [])][item.index]} — {item.status}
-            {item.evidence?.map((ref, i) => <p key={i}>{ref.field.replaceAll('_', ' ')}: “{ref.quote}”</p>)}
+            {item.evidence?.map((ref, i) => <p key={i}>{ref.field.replaceAll('_', ' ')}: {ref.quote}</p>)}
           </li>)}</ul>}
         </> : <p style={{ color: '#64748b', fontSize: 13 }}>{running(run?.status) ? 'Analysis pending — final recommendations are being prepared.' : 'AI analysis is unavailable for this search match.'}</p>}
       </div>
@@ -115,6 +97,7 @@ export default function CandidateRecommendations({ job, onTagged }) {
   const [error, setError] = useState('');
   const [tagging, setTagging] = useState(null);
   const [expandedCandidate, setExpandedCandidate] = useState(null);
+  const [candidateLimit, setCandidateLimit] = useState(20);
   const load = useCallback(async id => {
     const next = await candidateMatchingService.status(job._uuid, id);
     setSnapshot(next);
@@ -176,6 +159,8 @@ export default function CandidateRecommendations({ job, onTagged }) {
 
   const run = snapshot?.run;
   const coverage = snapshot?.coverage;
+  const legacy = Boolean(run && run.config_version !== SCORING_VERSION);
+  const incomplete = run?.status === 'completed' && !run.is_stale && !legacy && (snapshot?.results?.length !== snapshot?.retrieved || snapshot?.results?.some(result => !Number.isInteger(result.score) || result.score < 0 || result.score > 100 || !result.assessment?.analysis?.trim()));
   return <section style={panel} aria-label="Recommended candidates">
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -199,19 +184,30 @@ export default function CandidateRecommendations({ job, onTagged }) {
     {(run?.is_stale || run?.status === 'stale') && <p style={{ color: '#92400e' }}>Job or applicant information has changed. Refresh recommendations before tagging.</p>}
     {snapshot?.newlyIndexed > 0 && run?.status === 'completed' && <p style={{ color: '#64748b' }}>Additional applicant profiles have been indexed since this search. Refresh to include them.</p>}
     {run?.status === 'draft' && <p>Use Find matching candidates to search automatically from this job's description.</p>}
-    <InterpretationNotes key={`${job._uuid}-${runId}`} warnings={snapshot?.requirementWarnings} />
-    {snapshot?.searchMatches?.length > 0 && (run?.status !== 'completed' || !snapshot.results.length) && <div style={{ marginTop: 16 }}>
-      <h3>Search matches</h3><p style={{ color: '#64748b', fontSize: 13 }}>Ranked by semantic and keyword relevance. AI recommendations appear after assessment.</p>
-      <CandidateTable>{snapshot.searchMatches.map(result => <CandidateRow
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px 20px', margin: '16px 0', padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10 }}>
+      <label htmlFor={`candidate-limit-${job._uuid}`} style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>Show top {candidateLimit} candidates</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 180px', maxWidth: 300, color: '#64748b', fontSize: 11 }}>
+        <span>20</span><input id={`candidate-limit-${job._uuid}`} type="range" min="20" max="50" step="1" value={candidateLimit}
+          aria-valuetext={`Top ${candidateLimit} candidates`} onChange={event => setCandidateLimit(Number(event.target.value))}
+          style={{ width: '100%', minWidth: 0, accentColor: '#0b2f5b', cursor: 'pointer' }} /><span>50</span>
+      </div>
+      {run?.status === 'completed' && <span style={{ color: '#64748b', fontSize: 12 }}>Showing {Math.min(candidateLimit, snapshot.results.length)} of {snapshot.results.length} scored candidates</span>}
+    </div>
+    {incomplete && <p role="alert" style={{ color: '#b91c1c' }}>AI scoring is incomplete. Refresh recommendations to score every retrieved candidate.</p>}
+    {snapshot?.searchMatches?.length > 0 && (run?.status !== 'completed' || (legacy && !snapshot.results.length)) && <div style={{ marginTop: 16 }}>
+      <h3>Search matches</h3><p style={{ color: '#64748b', fontSize: 13 }}>Ranked by semantic and keyword relevance. AI scores appear after assessment.</p>
+      <CandidateTable>{snapshot.searchMatches.slice(0, candidateLimit).map(result => <CandidateRow
         key={result.applicant_id} result={result} run={run} expanded={expandedCandidate === result.applicant_id}
         onToggle={() => setExpandedCandidate(expandedCandidate === result.applicant_id ? null : result.applicant_id)}
         onView={() => navigate(`/admin/applicants/${encodeURIComponent(result.applicants.applicant_code)}`)} />)}</CandidateTable>
     </div>}
     {run?.status === 'completed' && <>
       <p style={{ color: '#64748b', fontSize: 13 }}>Generated {new Date(run.completed_at).toLocaleString()}. Relevance scores reflect requirement evidence, not a hiring probability.</p>
-      {!snapshot.results.length && <p>No sufficiently supported recommendations were found in the indexed pool. Review requirements or use manual applicant search.</p>}
+      {legacy && <p style={{ color: '#64748b', fontSize: 12 }}>Older scoring format. Refresh recommendations to score every retrieved candidate.</p>}
+      {snapshot.results.length > 0 && snapshot.results.length < candidateLimit && <p style={{ color: '#64748b', fontSize: 12 }}>Available scored candidates: {snapshot.results.length}.</p>}
+      {!snapshot.results.length && !incomplete && <p>{legacy ? 'This saved run did not score these search matches. Refresh recommendations to score every retrieved candidate.' : 'No eligible applicants were retrieved for this search.'}</p>}
       <CandidateTable>
-        {snapshot.results.map(result => <CandidateRow
+        {snapshot.results.slice(0, candidateLimit).map(result => <CandidateRow
           key={result.applicant_id} result={result} run={run} final tagging={tagging}
           expanded={expandedCandidate === result.applicant_id}
           onToggle={() => setExpandedCandidate(expandedCandidate === result.applicant_id ? null : result.applicant_id)}

@@ -1,5 +1,5 @@
 import { CONFIG, safeError } from '../_shared/matching/core.js';
-import { MATCHING_VERSION } from '../_shared/matching/batch.js';
+import { ASSESSMENT_MODEL, MATCHING_VERSION } from '../_shared/matching/batch.js';
 import { authenticate, db, diagnostics, env, HttpError, json, rpc } from '../_shared/matching/runtime.ts';
 
 const RUN_COLUMNS = 'id,client_job_id,job_hash,requirements,confirmed_at,status,phase,coverage,is_stale,last_error,created_at,completed_at,config_version,final_ai_calls,retrieval_ms';
@@ -31,7 +31,7 @@ Deno.serve(async request => {
     if (!job) throw new HttpError(404, 'Job not found');
     if (body.action === 'prepare') {
       if (!String(job.job_description || '').trim()) throw new HttpError(400, 'Add a meaningful job description using Edit job before matching');
-      const prepared = await rpc(client, 'matching_prepare', { p_job: job.id, p_requester: admin.id, p_model: env('GROQ_MODEL'), p_refresh: body.refresh === true });
+      const prepared = await rpc(client, 'matching_prepare', { p_job: job.id, p_requester: admin.id, p_model: ASSESSMENT_MODEL, p_refresh: body.refresh === true });
       if (prepared.status === 'extracting' || prepared.status === 'queued') wakeWorker(prepared.id);
       return json({ runId: prepared.id });
     }
@@ -69,8 +69,9 @@ Deno.serve(async request => {
       const tagged = new Set((tags || []).map(tag => tag.applicant_id));
       const current = (results || []).filter(result => !result.stale).map(result => ({ ...result, alreadyTagged: tagged.has(result.applicant_id) }));
       const searchMatches = [...current].sort((a, b) => Number(b.retrieval?.rrf || 0) - Number(a.retrieval?.rrf || 0) || a.applicant_id.localeCompare(b.applicant_id))
-        .slice(0, 20).map((result, i) => ({ applicant_id: result.applicant_id, applicants: result.applicants, retrieval_rank: i + 1, alreadyTagged: result.alreadyTagged }));
-      const assessmentStatus = run.status === 'completed' ? 'completed' : run.is_stale || run.status === 'stale' ? 'stale'
+        .slice(0, 50).map((result, i) => ({ applicant_id: result.applicant_id, applicants: result.applicants, retrieval_rank: i + 1, alreadyTagged: result.alreadyTagged }));
+      const completeScores = current.filter(result => result.final_rank !== null && Number.isInteger(result.score) && result.score >= 0 && result.score <= 100 && result.assessment?.analysis?.trim()).length;
+      const assessmentStatus = run.is_stale || run.status === 'stale' ? 'stale' : run.status === 'completed' ? (run.config_version === MATCHING_VERSION && completeScores !== retrieved ? 'failed' : 'completed')
         : run.status === 'failed' ? 'failed' : current.length || run.phase === 'assessment' ? 'pending' : 'not_started';
       // This reminder is only shown for completed runs. Avoid scanning the index
       // every second while retrieval and ranking need the database's cache.

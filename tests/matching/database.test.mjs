@@ -37,6 +37,8 @@ test('migration and matching workflow on isolated PostgreSQL with pgvector 0.8.0
     await db.exec(await readFile(new URL('../../supabase/migrations/20261009160809_matching_batch_v2.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../../supabase/migrations/20261009175632_matching_auto_v3.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../../supabase/migrations/20261010145617_matching_retrieval_performance.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../../supabase/migrations/20261019090916_matching_description_only_top50.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../../supabase/migrations/20261019110750_matching_score_every_candidate.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../../supabase/migrations/20261010191235_matching_compact_retrieval.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../../supabase/migrations/20261010192151_matching_ranked_retrieval.sql', import.meta.url), 'utf8'));
     await db.exec(await readFile(new URL('../../supabase/migrations/20261010192701_matching_unknown_location_index.sql', import.meta.url), 'utf8'));
@@ -168,7 +170,7 @@ test('migration and matching workflow on isolated PostgreSQL with pgvector 0.8.0
       assert.equal(batch.length, 1);
       assert.equal(await scalar('select matching_begin_batch($1,$2)', [run.id, assessment.claim_token]), 1);
       const hashes=batch.map(x=>({applicant_id:x.applicant_id,source_hash:x.source_hash}));
-      const selected=[{applicant_id:applicantId,source_hash:batch[0].source_hash,score:100,assessment:{reason:'Direct skills',evidence:[{field:'skills',quote:'Kubernetes'}],gaps:[],unknowns:[]}}];
+      const selected=[{applicant_id:applicantId,source_hash:batch[0].source_hash,score:100,assessment:{analysis:'Kubernetes directly supports the role.',reason:'Direct skills',evidence:[{field:'skills',quote:'Kubernetes'}],gaps:[],unknowns:[]}}];
       assert.equal(await scalar('select matching_finish_batch($1,$2,$3,$4)',[run.id,assessment.claim_token,hashes,selected]),true);
       assert.equal(await scalar('select matching_finish_batch($1,$2,$3,$4)',[run.id,assessment.claim_token,hashes,selected]),false);
       assert.equal(await scalar('select final_ai_calls from job_match_runs where id=$1',[run.id]),1);
@@ -180,12 +182,12 @@ test('migration and matching workflow on isolated PostgreSQL with pgvector 0.8.0
       await db.query("update applicants set skills='Docker' where id=$1", [applicantId]);
       assert.equal(await scalar('select stale from job_match_results where run_id=$1', [run.id]), true);
       assert.equal(await scalar('select is_stale from job_match_runs where id=$1', [run.id]), true);
-      await db.query("update client_jobs set experience='12+' where id=$1", [jobId]);
+      await db.query("update client_jobs set job_description='Kubernetes with 12+ years' where id=$1", [jobId]);
       assert.equal(await scalar('select status from job_match_runs where id=$1', [run.id]), 'stale');
       const next = await scalar('select to_jsonb(matching_prepare($1,$2,$3,false))', [jobId, userId, 'test-model']);
       assert.equal(next.status, 'extracting'); assert.equal(next.confirmed_at, null);
     });
-    await t.test('50-candidate batches finish atomically without assessing omitted candidates', async () => {
+    await t.test('50-candidate batches save all supported scores atomically', async () => {
       for(let i=0;i<52;i++) await insertApplicant('Kubernetes AWS');
       let pending;
       while((pending=await claim()).length) for(const item of pending) await finish(item,'skills: Kubernetes AWS');
@@ -198,13 +200,22 @@ test('migration and matching workflow on isolated PostgreSQL with pgvector 0.8.0
       assert.equal(pool.length,50);
       await db.query('select matching_save_pool($1,$2,$3,$4,$5)',[prepared.id,worker.claim_token,v,pool,{}]);
       const hashes=pool.map(x=>({applicant_id:x.applicant_id,source_hash:x.source_hash}));
-      const selected=pool.slice(0,20).map(x=>({...hashes.find(h=>h.applicant_id===x.applicant_id),score:80,assessment:{reason:'Kubernetes',evidence:[{field:'skills',quote:'Kubernetes'}],gaps:[],unknowns:[]}}));
+      const selected=pool.slice(0,50).map(x=>({...hashes.find(h=>h.applicant_id===x.applicant_id),score:80,assessment:{analysis:'Kubernetes supports the technical requirement.',reason:'Kubernetes',evidence:[{field:'skills',quote:'Kubernetes'}],gaps:[],unknowns:[]}}));
       await assert.rejects(()=>scalar('select matching_finish_batch($1,$2,$3,$4)',[prepared.id,worker.claim_token,hashes,[selected[0],selected[0]]]));
       assert.equal(await scalar('select count(assessment) from job_match_results where run_id=$1',[prepared.id]),0);
+      for (const invalid of [selected.slice(0,49), [], selected.map((x,i)=>i?x:{...x,score:-1}), selected.map((x,i)=>i?x:{...x,score:1.5}), selected.map((x,i)=>i?x:{...x,score:null}), selected.map((x,i)=>i?x:{...x,assessment:{analysis:''}}), selected.map((x,i)=>i?x:{...x,applicant_id:'00000000-0000-4000-8000-000000000000'})]) {
+        await assert.rejects(()=>scalar('select matching_finish_batch($1,$2,$3,$4)',[prepared.id,worker.claim_token,hashes,invalid]));
+        assert.equal(await scalar('select count(assessment) from job_match_results where run_id=$1',[prepared.id]),0);
+        assert.equal(await scalar('select status from job_match_runs where id=$1',[prepared.id]),'running');
+      }
+      selected[0].score=0; selected[1].score=100;
       await db.query('select matching_begin_batch($1,$2)',[prepared.id,worker.claim_token]);
       assert.equal(await scalar('select matching_finish_batch($1,$2,$3,$4)',[prepared.id,worker.claim_token,hashes,selected]),true);
-      assert.equal(await scalar('select count(final_rank) from job_match_results where run_id=$1',[prepared.id]),20);
-      assert.equal(await scalar('select count(*) from job_match_results where run_id=$1 and assessment is null',[prepared.id]),30);
+      assert.equal(await scalar('select count(final_rank) from job_match_results where run_id=$1',[prepared.id]),50);
+      assert.equal(await scalar('select min(score)::integer from job_match_results where run_id=$1',[prepared.id]),0);
+      assert.equal(await scalar('select count(suitable) from job_match_results where run_id=$1',[prepared.id]),0);
+      assert.equal(await scalar('select score::integer from job_match_results where run_id=$1 and final_rank=1',[prepared.id]),100);
+      assert.equal(await scalar('select count(*) from job_match_results where run_id=$1 and assessment is null',[prepared.id]),0);
       assert.equal(await scalar('select status from job_match_runs where id=$1',[prepared.id]),'completed');
       assert.equal(await scalar('select to_jsonb(matching_claim_run())'),null);
 
@@ -246,6 +257,17 @@ test('migration and matching workflow on isolated PostgreSQL with pgvector 0.8.0
       assert.notEqual(next.id,old);assert.equal(next.phase,'requirements');assert.equal(next.requirements,null);assert.equal(next.confirmed_at,null);
       assert.equal(await scalar('select status from job_match_runs where id=$1',[old]),'stale');
       assert.equal((await scalar('select to_jsonb(matching_prepare($1,$2,$3,false))',[job,userId,'test-model'])).id,next.id);
+    });
+    await t.test('only description edits invalidate runs, and v4 partial scoring caches cannot enter v5', async () => {
+      const job = await scalar("insert into client_jobs(job_title,job_description,experience) values('Engineer','Kubernetes ten years','5') returning id");
+      const old = await scalar("insert into job_match_runs(client_job_id,job_hash,groq_model,requested_by,status,phase,config_version,requirements) select id,matching_private.job_hash(j),'test-model',$2,'completed','complete','matching-description-v4',$3 from client_jobs j where id=$1 returning id", [job,userId,requirements]);
+      const fresh = await scalar('select to_jsonb(matching_prepare($1,$2,$3,false))',[job,userId,'test-model']);
+      assert.notEqual(fresh.id,old); assert.equal(fresh.requirements,null); assert.equal(fresh.query_embedding,null);
+      assert.equal(fresh.config_version,'matching-all-scored-v5');
+      await db.query("update client_jobs set experience='2',location='Elsewhere',job_title='Changed role' where id=$1",[job]);
+      assert.equal(await scalar('select is_stale from job_match_runs where id=$1',[fresh.id]),false);
+      await db.query("update client_jobs set job_description='Kubernetes fifteen years' where id=$1",[job]);
+      assert.equal(await scalar('select is_stale from job_match_runs where id=$1',[fresh.id]),true);
     });
     await t.test('retrieval timeout retries preserve vectors and stop after three claims', async () => {
       const j = await scalar("insert into client_jobs(job_title) values('Retry fixture') returning id");

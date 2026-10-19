@@ -12,14 +12,21 @@ test('one-click matching, nonblocking warnings, search visibility, evidence and 
   const { MemoryRouter } = await import('react-router-dom');
   const req = { mandatory: ['Kubernetes'], preferred: ['AWS'], keywords: ['Kubernetes'], conflicts: ['Resolve experience conflict'], min_total_years: null, eligible_locations: [], max_notice_days: null };
   let warnings = ['Description takes precedence over experience field'];
+  let manyResults = false, forceIncomplete = false, version = 'matching-all-scored-v5';
   let status = 'draft', stale = false, tagged = false, findCalls = 0, tagCalls = 0, statusCalls = 0, fail = false, empty = false, noSearchMatches = false, analysis = 'The supplied Kubernetes skills support the role. AWS depth needs verification.';
-  const state = () => ({ run: { status, phase: 'assessment', requirements: req, is_stale: stale, completed_at: new Date().toISOString() },
-    searchMatches: !noSearchMatches && (status==='running'||status==='failed') ? [{applicant_id:'a1',retrieval_rank:1,applicants:{applicant_code:'APP-1',full_name:'Search Candidate',current_position:'Engineer',skills:'Kubernetes'}}] : [],
-    requirementWarnings: warnings, assessed: 1, retrieved: 2, coverage: { total: 100, indexed: 50, pending: 49, failed: 1, insufficient: 0 },
+  const baseState = () => ({ run: { status, config_version: version, phase: 'assessment', requirements: req, is_stale: stale, completed_at: new Date().toISOString() },
+    searchMatches: !noSearchMatches && (status==='running'||status==='failed'||(status==='completed'&&empty&&version!=='matching-all-scored-v5')) ? [{applicant_id:'a1',retrieval_rank:1,applicants:{applicant_code:'APP-1',full_name:'Search Candidate',current_position:'Engineer',skills:'Kubernetes'}}] : [],
+    requirementWarnings: warnings, assessed: status==='completed'?(empty?0:manyResults?50:1):0, retrieved: status==='completed'?(empty?(version==='matching-all-scored-v5'?0:1):manyResults?50:1):1, coverage: { total: 100, indexed: 50, pending: 49, failed: 1, insufficient: 0 },
     results: status === 'completed' && !empty ? [{ applicant_id: 'a1', final_rank: 1, score: 67, evidence_coverage: 0.5, alreadyTagged: tagged,
       applicants: { applicant_code: 'APP-1', full_name: 'Sample Candidate', current_position: 'Engineer', total_experience: '6-10', education: 'Bachelor of Engineering', notice_period: 'Immediate' },
       assessment: { reason: 'Direct Kubernetes evidence', analysis, evidence: [{ field: 'skills', quote: 'Kubernetes' }], gaps: [], unknowns: ['AWS depth'] },
     }] : [] });
+  const state = () => {
+    const value = baseState();
+    if (manyResults && value.results.length) value.results = Array.from({length: 50}, (_, i) => ({...value.results[0], applicant_id: `a${i+1}`, final_rank: i+1,score:i===49?0:99-i}));
+    if (forceIncomplete) { value.retrieved=50; value.results=value.results.slice(0,49); }
+    return value;
+  };
   globalThis.__matchingFixture = {
     service: {
       latest: async () => ({ runId: 'run1' }),
@@ -55,14 +62,7 @@ test('one-click matching, nonblocking warnings, search visibility, evidence and 
     await click('Find matching candidates');
     assert.equal(findCalls,1);
     assert.doesNotMatch(host.textContent,/Description takes precedence/);
-    const callsBeforeNotes = statusCalls;
-    const notesToggle = await click('Job interpretation notes');
-    assert.equal(notesToggle.getAttribute('aria-expanded'), 'true');
-    assert.match(host.textContent,/Description takes precedence/);
-    await click('Job interpretation notes');
-    assert.doesNotMatch(host.textContent,/Description takes precedence/);
-    assert.equal(statusCalls, callsBeforeNotes);
-    await click('Job interpretation notes');
+    assert.doesNotMatch(host.textContent,/Job interpretation notes/);
     assert.match(host.textContent, /Search complete/);
     assert.match(host.textContent, /Search Candidate/);
     assert.doesNotMatch(host.textContent, /Tag for this job/);
@@ -76,11 +76,11 @@ test('one-click matching, nonblocking warnings, search visibility, evidence and 
     // Running disables refresh; use the existing poll once with a short test timer.
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 4100)); });
     assert.match(host.textContent, /Sample Candidate/);
-    assert.match(host.textContent, /Description takes precedence/); // Polling preserves disclosure state.
+    assert.doesNotMatch(host.textContent, /Description takes precedence/);
     const callsBeforeExpand=statusCalls;
     await act(async()=>host.querySelector('[aria-controls^="candidate-details-"][aria-expanded="false"]').click());
     assert.equal(statusCalls,callsBeforeExpand);
-    assert.match(host.textContent, /skills: “Kubernetes”/);
+    assert.match(host.textContent, /skills: Kubernetes/);
     assert.match(host.textContent, /AWS depth needs verification/);
     assert.match(host.textContent, /Bachelor of Engineering/);
     assert.equal(host.querySelector('[aria-controls^="candidate-details-"][aria-expanded="true"]').getAttribute('aria-controls'),'candidate-details-a1');
@@ -101,16 +101,43 @@ test('one-click matching, nonblocking warnings, search visibility, evidence and 
     await click('Refresh recommendations');
     assert.match(host.textContent, /Refresh recommendations before tagging/);
     assert.equal([...host.querySelectorAll('button')].find(button => button.textContent.includes('Tag for this job')).disabled, true);
-    analysis=undefined; await click('Refresh recommendations');
+    version='matching-description-v4'; analysis=undefined; await click('Refresh recommendations');
     await act(async()=>host.querySelector('[aria-controls^="candidate-details-"][aria-expanded="false"]').click());
     assert.match(host.textContent,/Detailed analysis unavailable/);
     assert.match(host.textContent,/Direct Kubernetes evidence/);
+    version='matching-all-scored-v5'; analysis='The supplied skills support this role.'; manyResults = true;
+    await click('Refresh recommendations');
+    assert.equal(host.querySelectorAll('tbody > tr').length, 20);
+    const callsBeforeSlider = statusCalls, findsBeforeSlider = findCalls;
+    const slider = host.querySelector('input[type="range"]');
+    assert.equal(slider.min, '20'); assert.equal(slider.max, '50');
+    const setSlider = async value => { await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(slider, String(value));
+      slider.dispatchEvent(new window.Event('input', {bubbles:true}));
+      slider.dispatchEvent(new window.Event('change', {bubbles:true}));
+    }); };
+    await setSlider(50);
+    assert.equal(host.querySelectorAll('tbody > tr').length, 50);
+    assert.match(host.textContent, /Showing 50 of 50 scored candidates/);
+    assert.equal(host.querySelector('[aria-label="Relevance 0 out of 100"]').textContent,'0');
+    await setSlider(35);
+    assert.equal(host.querySelectorAll('tbody > tr').length, 35);
+    await setSlider(20);
+    assert.equal(host.querySelectorAll('tbody > tr').length, 20);
+    assert.equal(statusCalls, callsBeforeSlider); assert.equal(findCalls, findsBeforeSlider);
+    forceIncomplete=true; stale=false; await click('Refresh recommendations');
+    assert.match(host.textContent,/AI scoring is incomplete/);
+    assert.doesNotMatch(host.textContent,/Pending/);
+    forceIncomplete=false; manyResults = false;
     fail = true; await click('Refresh recommendations');
     assert.match(host.querySelector('[role="alert"]').textContent, /Temporary matching failure/);
     assert.doesNotMatch(host.textContent, /No sufficiently supported/);
     fail = false; empty = true; stale = false; await click('Retry');
-    assert.match(host.textContent, /No sufficiently supported recommendations/);
-    noSearchMatches=true; status='failed'; await click('Refresh recommendations');
+    assert.match(host.textContent, /No eligible applicants/);
+    version='matching-description-v4'; await click('Refresh recommendations');
+    assert.match(host.textContent,/Not scored in this saved run/);
+    assert.doesNotMatch(host.textContent,/Pending/);
+    version='matching-all-scored-v5'; noSearchMatches=true; status='failed'; await click('Refresh recommendations');
     assert.match(host.textContent,/No candidates were retrieved/);
     assert.doesNotMatch(host.textContent,/Search matches remain available/);
     globalThis.__matchingFixture.service.prepare = async () => ({ runId: 'run2' });

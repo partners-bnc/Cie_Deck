@@ -15,14 +15,14 @@ candidateMatchingService.prepare = async () => { stage = 'running'; readyAt = Da
 candidateMatchingService.status = async () => {
   if (fail) throw new Error('Fixture provider unavailable. Please retry.');
   if (stage === 'running' && Date.now() >= readyAt) stage = 'completed';
-  return { coverage, requirementWarnings: ['Using job description over conflicting experience field'], searchMatches: stage==='running' ? [{applicant_id:'22222222-2222-4222-8222-222222222222',retrieval_rank:1,applicants:{applicant_code:'APP-FIXTURE',full_name:'Sample Candidate',current_position:'Platform Engineer',skills:'Kubernetes AWS',total_experience:'6-10'}}] : [], assessed: stage === 'completed' ? 2 : 0, retrieved: 2, newlyIndexed: 0,
-    run: { id: 'fixture-run', status: stage, phase: stage === 'draft' ? 'requirements' : 'assessment', is_stale: stale,
+  return { coverage, requirementWarnings: ['Using job description over conflicting experience field'], searchMatches: stage==='running' ? [{applicant_id:'22222222-2222-4222-8222-222222222222',retrieval_rank:1,applicants:{applicant_code:'APP-FIXTURE',full_name:'Sample Candidate',current_position:'Platform Engineer',skills:'Kubernetes AWS',total_experience:'6-10'}}] : [], assessed: stage === 'completed' ? 50 : 0, retrieved: 50, newlyIndexed: 0,
+    run: { id: 'fixture-run', config_version: 'matching-all-scored-v5', status: stage, phase: stage === 'draft' ? 'requirements' : 'assessment', is_stale: stale,
       requirements: confirmed, created_at: new Date().toISOString(), completed_at: new Date().toISOString() },
-    results: stage === 'completed' && !empty ? [{ applicant_id: '22222222-2222-4222-8222-222222222222', final_rank: 1,
-      score: 67, evidence_coverage: 0.5, alreadyTagged: tagged,
-      applicants: { applicant_code: 'APP-FIXTURE', full_name: 'Sample Candidate', current_position: 'Platform Engineer', total_experience: '6-10', current_location: 'Bengaluru', education: 'Bachelor of Engineering', current_company: 'Example Systems', notice_period: 'Immediate' },
+    results: stage === 'completed' && !empty ? Array.from({length:50},(_,i)=>({ applicant_id: `fixture-${i}`, final_rank: i+1,
+      score: i===49?0:100-i*2, evidence_coverage: 0.5, alreadyTagged: tagged,
+      applicants: { applicant_code: 'APP-FIXTURE', full_name: `Sample Candidate ${i+1}`, current_position: 'Platform Engineer', total_experience: '6-10', current_location: 'Bengaluru', education: 'Bachelor of Engineering', current_company: 'Example Systems', notice_period: 'Immediate' },
       assessment: { reason: 'Recorded Kubernetes experience', analysis: 'The supplied profile records Kubernetes experience that supports the platform engineering requirement. AWS is listed, although the depth of that experience is unknown and should be verified.', evidence: [{field:'skills',quote:'Kubernetes'}], gaps: [], unknowns: ['AWS depth'] },
-    }] : [] };
+    })) : [] };
 };
 candidateMatchingService.verifyTag = async () => ({ allowed: !stale, recruiter: 'Fixture Recruiter' });
 jobService.shortlistCandidate = async () => { tagged = true; return { success: true }; };

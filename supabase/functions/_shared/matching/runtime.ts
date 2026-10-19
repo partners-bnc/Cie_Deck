@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.100.1';
 import { getEncoding } from 'npm:js-tiktoken@1.0.21';
-import { CONFIG, professionalText, validateVector } from './core.js';
-import { GROQ_SYSTEM_PREFIX } from './batch.js';
+import { CONFIG, professionalText, RequirementFormatError, validateVector } from './core.js';
+import { ASSESSMENT_MODEL, ASSESSMENT_SYSTEM_PREFIX, BatchValidationError } from './batch.js';
 
 const encoding = getEncoding('cl100k_base');
 export const tokenizer = { encode: (text: string) => encoding.encode(text, [], []), decode: (tokens: number[]) => encoding.decode(tokens) };
@@ -69,15 +69,14 @@ export class ProviderError extends Error {
   }
   get transient() { return this.status === 429 || this.status >= 500; }
 }
-export async function groq(instruction: string, data: unknown, maxCompletionTokens = 6000) {
-  const model = env('GROQ_MODEL');
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST', signal: AbortSignal.timeout(25000),
-    headers: { Authorization: `Bearer ${env('GROQ_API_KEY')}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, temperature: 0, max_completion_tokens: maxCompletionTokens,
-      ...(model === 'qwen/qwen3.8-27b' ? { reasoning_effort: 'none' } : {}),
-      response_format: { type: 'json_object' }, messages: [
-        { role: 'system', content: GROQ_SYSTEM_PREFIX + instruction },
+export async function assess(instruction: string, data: unknown, maxCompletionTokens = 6000, responseFormat: Record<string, unknown> = { type: 'json_object' }) {
+  const model = ASSESSMENT_MODEL;
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST', signal: AbortSignal.timeout(60000),
+    headers: { Authorization: `Bearer ${env('OPENAI_API_KEY')}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, max_completion_tokens: maxCompletionTokens, reasoning_effort: 'minimal', verbosity: 'low', store: false,
+      response_format: responseFormat, messages: [
+        { role: 'system', content: ASSESSMENT_SYSTEM_PREFIX + instruction },
         { role: 'user', content: JSON.stringify(data) },
       ] }),
   });
@@ -87,8 +86,9 @@ export async function groq(instruction: string, data: unknown, maxCompletionToke
     throw new ProviderError(response.status, Number.isFinite(seconds) ? Math.max(1, Math.ceil(seconds)) : null);
   }
   const body = await response.json();
-  if (body.choices?.[0]?.finish_reason !== 'stop') throw new Error('Incomplete provider response');
-  return JSON.parse(body.choices[0].message.content);
+  if (body.choices?.[0]?.finish_reason !== 'stop') throw new BatchValidationError('Incomplete provider response');
+  try { return JSON.parse(body.choices[0].message.content); }
+  catch { throw new BatchValidationError('Invalid assessment JSON'); }
 }
 export function boundedFields(source: Record<string, unknown>, fields: string[], total = 6000) {
   const limit = Math.floor(total / fields.length);
@@ -97,7 +97,7 @@ export function boundedFields(source: Record<string, unknown>, fields: string[],
 export function stageDiagnostic(runId: unknown, stage: string, elapsedMs: number, attempt: unknown, error?: unknown) {
   console.info(JSON.stringify({ event: 'matching_stage', run_id: runId ?? null, stage,
     elapsed_ms: Math.round(elapsedMs), attempt: attempt ?? null,
-    error_code: error instanceof DatabaseError ? error.code : error instanceof ProviderError ? String(error.status) : error ? 'processing_error' : null }));
+    error_code: error instanceof DatabaseError ? error.code : error instanceof ProviderError ? String(error.status) : error instanceof BatchValidationError || error instanceof RequirementFormatError ? error.code : error ? 'processing_error' : null }));
 }
 export function diagnostics(error: unknown) {
   // Do not log provider bodies, candidate text, authorization headers or credentials.

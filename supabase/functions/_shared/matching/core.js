@@ -1,6 +1,29 @@
 export const CONFIG = Object.freeze({ model: 'text-embedding-3-large', dimensions: 3072, version: 'applicant-v1', budget: 7600, pool: 50 });
 export const SEMANTIC_FIELDS = ['current_position', 'skills', 'total_experience', 'relevant_experience', 'education', 'certification', 'process_knowledge', 'cv_summary'];
 export const ATTRIBUTE_FIELDS = ['current_location', 'expected_pay', 'notice_period', 'work_authorization'];
+// Enforce the wire types at generation time; semantic validation still follows.
+export const REQUIREMENTS_RESPONSE_FORMAT = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'matching_requirements', strict: true,
+    schema: {
+      type: 'object', additionalProperties: false,
+      properties: {
+        mandatory: { type: 'array', maxItems: 20, items: { type: 'string', maxLength: 500 } },
+        preferred: { type: 'array', maxItems: 20, items: { type: 'string', maxLength: 500 } },
+        keywords: { type: 'array', maxItems: 30, items: { type: 'string', maxLength: 500 } },
+        conflicts: { type: 'array', maxItems: 20, items: { type: 'string', maxLength: 500 } },
+        min_total_years: { type: ['number', 'null'], minimum: 0, maximum: 70 },
+        eligible_locations: { type: 'array', maxItems: 20, items: { type: 'string', maxLength: 500 } },
+        max_notice_days: { type: ['integer', 'null'], minimum: 0, maximum: 365 },
+      },
+      required: ['mandatory', 'preferred', 'keywords', 'conflicts', 'min_total_years', 'eligible_locations', 'max_notice_days'],
+    },
+  },
+};
+export class RequirementFormatError extends Error {
+  constructor() { super('The AI returned an invalid requirements response. Retry matching.'); this.name = 'RequirementFormatError'; this.code = 'invalid_requirements_format'; }
+}
 const clean = value => String(value ?? '').trim();
 const unknown = value => !clean(value) || /^(n\/?a|unknown|not specified|null|-)$/i.test(clean(value));
 
@@ -106,13 +129,17 @@ export function validateAssessment(value, requirements, evidenceFields) {
 }
 
 export function safeError(error) {
+  if (error?.name === 'RequirementFormatError') return 'The AI returned an invalid requirements response. Retry matching.';
   if (error?.code === '57014') return 'Candidate retrieval exceeded the database time limit; retry scheduled unless the three-attempt limit is exhausted';
   if (error?.message === 'Job requirements could not be interpreted; correct the job description using Edit job and retry') return error.message;
+  if (error?.message === 'Assessment context limit exceeded; requirements and all candidate profiles must fit before scoring') return error.message;
   if (error?.message === 'Requirements exceed batch budget; shorten requirements before retrying') return error.message;
   if (error?.message === 'Assessment provider HTTP 429') return 'Assessment provider rate limit';
   // These validation messages contain no provider output or applicant content.
   if (['Incomplete assessment', 'Invalid requirement reference', 'Invalid evidence status',
     'Too many evidence references', 'Unsupported evidence', 'Evidence required',
-    'Incomplete provider response'].includes(error?.message)) return error.message;
+    'Incomplete provider response', 'Invalid batch recommendations', 'Invalid batch analysis',
+    'Incomplete batch assessment', 'Invalid assessment JSON', 'Invalid batch score',
+    'Invalid batch candidate', 'Invalid batch score or reason', 'Invalid evidence reference', 'Invalid batch gaps or unknowns'].includes(error?.message)) return error.message;
   return error?.name === 'TimeoutError' || error?.name === 'AbortError' ? 'Provider timeout' : 'Matching operation failed; retry or inspect server diagnostics';
 }
