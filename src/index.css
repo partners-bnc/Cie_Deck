@@ -355,3 +355,441 @@ body {
     opacity: 0.55;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* Apple Intelligence Style AI Button & Liquid Glass Experience            */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+.apple-ai-pill-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 
+    0 3px 14px rgba(6, 182, 212, 0.25),
+    0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  z-index: 1;
+}
+
+/* Continuously rotating / flowing gradient border */
+.apple-ai-pill-btn::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: conic-gradient(
+    from 0deg,
+    #00e5ff 0deg,
+    #10b981 72deg,
+    #84cc16 144deg,
+    #facc15 216deg,
+    #06b6d4 288deg,
+    #00e5ff 360deg
+  );
+  animation: appleAiConicSpin 3.2s linear infinite;
+  z-index: 0;
+}
+
+@keyframes appleAiConicSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.apple-ai-pill-btn.large {
+  padding: 2.5px;
+}
+.apple-ai-pill-btn.large::before {
+  animation-duration: 2.8s;
+}
+
+.apple-ai-pill-btn:hover {
+  transform: translateY(-1.5px) scale(1.025);
+  box-shadow: 
+    0 6px 20px rgba(6, 182, 212, 0.38),
+    0 2px 8px rgba(234, 179, 8, 0.28);
+}
+
+.apple-ai-pill-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Liquid Glass Inner Pill with Light Reflection */
+.apple-ai-pill-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 249, 255, 0.78) 100%);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.apple-ai-pill-btn.large .apple-ai-pill-inner {
+  padding: 5px 14px 5px 10px;
+  gap: 8px;
+}
+
+/* Moving Light Reflection: Smooth slow glide with 2.8s delay */
+.apple-ai-pill-inner::after {
+  content: '';
+  position: absolute;
+  top: -80%;
+  left: -140%;
+  width: 55%;
+  height: 260%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.92) 50%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  animation: appleAiSheenSweep 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes appleAiSheenSweep {
+  0% { left: -140%; opacity: 0; }
+  4% { opacity: 1; }
+  32% { left: 220%; opacity: 1; }
+  33%, 100% { left: 220%; opacity: 0; }
+}
+
+/* Three Stars Orbital Rotating & Zooming Motion */
+.apple-ai-stars-box {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.apple-ai-pill-btn.large .apple-ai-stars-box {
+  width: 24px;
+  height: 24px;
+}
+
+/* Node paths animated along 3 orbital stations with zoom in/out */
+.star-orbit-node {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-duration: 3.6s;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+  animation-iteration-count: infinite;
+}
+
+/* Star 1: Starts at Pos 1 (Large/Center) -> Pos 2 (Top Left) -> Pos 3 (Bottom Left) -> Pos 1 */
+.star-node-1 {
+  animation-name: orbitCycle1;
+}
+
+/* Star 2: Starts at Pos 2 (Top Left) -> Pos 3 (Bottom Left) -> Pos 1 (Large/Center) -> Pos 2 */
+.star-node-2 {
+  animation-name: orbitCycle2;
+}
+
+/* Star 3: Starts at Pos 3 (Bottom Left) -> Pos 1 (Large/Center) -> Pos 2 (Top Left) -> Pos 3 */
+.star-node-3 {
+  animation-name: orbitCycle3;
+}
+
+@keyframes orbitCycle1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1.15);
+    opacity: 1;
+  }
+  33.3% {
+    transform: translate(-7.5px, -6px) scale(0.72);
+    opacity: 0.85;
+  }
+  66.6% {
+    transform: translate(-7.5px, 6px) scale(0.82);
+    opacity: 0.9;
+  }
+}
+
+@keyframes orbitCycle2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(0.72);
+    opacity: 0.85;
+  }
+  33.3% {
+    transform: translate(0px, 12px) scale(0.82);
+    opacity: 0.9;
+  }
+  66.6% {
+    transform: translate(7.5px, 6px) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes orbitCycle3 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(0.82);
+    opacity: 0.9;
+  }
+  33.3% {
+    transform: translate(7.5px, -6px) scale(1.15);
+    opacity: 1;
+  }
+  66.6% {
+    transform: translate(0px, -12px) scale(0.72);
+    opacity: 0.85;
+  }
+}
+
+/* Professional Typography */
+.apple-ai-text {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f172a;
+  line-height: 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-ai-pill-btn.large .apple-ai-text {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+/* Liquid Glass Drawer Overlay & Panel */
+.liquid-glass-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.25);
+  /* No blur on background */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  display: flex;
+  justify-content: flex-end;
+  animation: liquidFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes liquidFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Straight edge panel with no curved corners, full height */
+.liquid-glass-drawer-panel {
+  position: relative;
+  width: min(1100px, 92vw);
+  height: 100%;
+  background: 
+    radial-gradient(circle at 85% 12%, rgba(186, 230, 253, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 18% 88%, rgba(224, 231, 255, 0.35) 0%, transparent 50%),
+    linear-gradient(165deg, rgba(248, 250, 252, 0.95) 0%, rgba(238, 244, 252, 0.9) 40%, rgba(220, 230, 242, 0.88) 100%);
+  backdrop-filter: blur(45px) saturate(190%);
+  -webkit-backdrop-filter: blur(45px) saturate(190%);
+  border-left: 1.5px solid rgba(255, 255, 255, 0.9);
+  /* Straight edges - NOT curved */
+  border-radius: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: 
+    -20px 0 50px rgba(15, 23, 42, 0.12),
+    inset 1px 0 2px rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: liquidSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes liquidSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.liquid-glass-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.52);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+.liquid-glass-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 28px 24px 28px;
+  scroll-behavior: smooth;
+}
+
+.liquid-glass-drawer-body::-webkit-scrollbar {
+  width: 6px;
+}
+.liquid-glass-drawer-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.liquid-glass-drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 10px;
+}
+.liquid-glass-drawer-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+.liquid-glass-drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 28px;
+  background: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.liquid-glass-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.6);
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.liquid-glass-close-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  transform: rotate(90deg) scale(1.05);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes aiOrbPulse {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.35), 0 0 40px rgba(14, 165, 233, 0.2);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 35px rgba(56, 189, 248, 0.6), 0 0 60px rgba(6, 182, 212, 0.35);
+  }
+  100% {
+    transform: scale(0.92);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.35), 0 0 40px rgba(14, 165, 233, 0.2);
+  }
+}
+
+@keyframes aiShimmerWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.ai-matching-loading-card {
+  padding: 44px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(186, 230, 253, 0.65);
+  border-radius: 24px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.95), 0 12px 36px rgba(14, 165, 233, 0.08);
+  margin: 18px 0;
+}
+
+.ai-matching-orb {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #06b6d4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  animation: aiOrbPulse 2.8s ease-in-out infinite;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.ai-matching-orb::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px dashed rgba(56, 189, 248, 0.75);
+  animation: spin 10s linear infinite;
+}
+
+.ai-progress-track {
+  width: min(380px, 90%);
+  height: 6px;
+  background: rgba(226, 232, 240, 0.85);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin: 18px 0 14px 0;
+}
+
+.ai-progress-fill {
+  width: 50%;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 50%, #06b6d4 100%);
+  position: absolute;
+  animation: aiShimmerWave 1.8s ease-in-out infinite;
+}
+
+
+
+
+

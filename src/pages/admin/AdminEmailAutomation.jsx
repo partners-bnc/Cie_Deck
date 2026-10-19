@@ -15,6 +15,7 @@ export default function AdminEmailAutomation() {
   const [sending, setSending] = useState(false);
   const [managerEmail, setManagerEmail] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [showRestriction, setShowRestriction] = useState(false);
   const curUserEmail = sessionStorage.getItem("bnc_admin_email") || "";
   const curUserRole = sessionStorage.getItem("bnc_admin_role");
@@ -188,6 +189,24 @@ export default function AdminEmailAutomation() {
             : 'Please find below the candidate(s) submitted for your consideration:'}
         </p>
 
+        {/* Recruiter Remarks / Custom Notes */}
+        {remarks && remarks.trim() && (
+          <div style={{
+            background: '#eff6ff',
+            borderLeft: '4px solid #2563eb',
+            padding: '10px 14px',
+            margin: '0 0 16px',
+            borderRadius: '0 8px 8px 0'
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
+              Recruiter Remarks / Special Notes:
+            </div>
+            <div style={{ fontSize: '13px', color: '#1e293b', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+              {remarks}
+            </div>
+          </div>
+        )}
+
         {/* Candidate Table */}
         <div style={{ borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
@@ -260,6 +279,16 @@ export default function AdminEmailAutomation() {
 
     // Intro text AFTER job details
     html += `<p>${intro}</p>`;
+
+    // Recruiter Remarks / Custom Notes in HTML
+    if (remarks && remarks.trim()) {
+      const cleanRemarks = String(remarks)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br/>');
+      html += `<div style="background:#eff6ff;border-left:4px solid #2563eb;padding:10px 14px;margin:12px 0 16px;border-radius:0 8px 8px 0"><strong style="font-size:11px;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.5px">Recruiter Remarks / Special Notes:</strong><p style="margin:4px 0 0;font-size:13px;color:#1e293b;line-height:1.5">${cleanRemarks}</p></div>`;
+    }
 
     // Candidate table
     const managerHeaders = ['S.No', 'Name', 'Contact', 'Email', 'Location', 'Experience', 'Recruiter Comments', 'Resume'];
@@ -361,10 +390,34 @@ export default function AdminEmailAutomation() {
       const result = await jobService.sendDirectEmail(toEmail, subject, htmlContent);
       if (result.success) {
         
-        // Update stages
+        // Update stages with remarks
         const newStage = isManager ? 'Manager Submit' : 'Client Submission';
-        await Promise.all(selected.map(c => jobService.updateShortlistStage(c.applicantId, jobCode, newStage)));
+        await Promise.all(selected.map(c => jobService.updateShortlistStage(c.applicantId, jobCode, newStage, { notes: remarks })));
         
+        // Permanent Audit Log
+        await jobService.logEmailCommunication({
+          jobCode,
+          submissionType: newStage,
+          recipientEmail: toEmail,
+          recipientName: isManager ? (job?.recruitmentManager || '') : (job?.reportingClientName || job?.clientName || ''),
+          subject,
+          remarks,
+          candidatesCount: selected.length,
+          candidatesSnapshot: selected.map(c => ({
+            applicantId: c.applicantId,
+            name: c.name,
+            totalExperience: c.totalExperience,
+            currentCTC: c.currentCTC,
+            expectedPay: c.expectedPay,
+            noticePeriod: c.noticePeriod,
+            contactNumber: c.contactNumber,
+            email: c.email
+          })),
+          sentBy: sessionStorage.getItem('bnc_admin_name') || sessionStorage.getItem('bnc_admin_id') || 'HR Admin',
+          status: 'Sent',
+          htmlContent
+        });
+
         // Update local state
         setCandidates(prev => prev.map(c => {
           if (selectedIds.has(c.applicantId)) {
@@ -377,8 +430,21 @@ export default function AdminEmailAutomation() {
           return c;
         }));
 
-        alert(`Email sent successfully via ZeptoMail! Stage updated to "${newStage}".`);
+        alert(`Email sent successfully via ZeptoMail! Logged permanently in communication audit logs. Stage updated to "${newStage}".`);
       } else {
+        await jobService.logEmailCommunication({
+          jobCode,
+          submissionType: isManager ? 'Manager Submit' : 'Client Submission',
+          recipientEmail: toEmail,
+          recipientName: isManager ? (job?.recruitmentManager || '') : (job?.reportingClientName || job?.clientName || ''),
+          subject,
+          remarks,
+          candidatesCount: selected.length,
+          candidatesSnapshot: selected.map(c => ({ applicantId: c.applicantId, name: c.name })),
+          sentBy: sessionStorage.getItem('bnc_admin_name') || sessionStorage.getItem('bnc_admin_id') || 'HR Admin',
+          status: 'Failed',
+          errorMessage: result.error || 'Unknown error'
+        });
         alert('Failed: ' + (result.error || 'Unknown error'));
       }
     } catch (err) {
@@ -513,7 +579,7 @@ export default function AdminEmailAutomation() {
                     <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{c.email || 'N/A'}</div>
                   </div>
                   <div style={{ fontSize: '12px', color: '#334155' }}>{c.currentLocation || 'N/A'}</div>
-                  <div style={{ fontSize: '12px', color: '#334155' }}>{c.uploadedBy || 'N/A'}</div>
+                  <div style={{ fontSize: '12px', color: '#334155' }}>{c.shortlistedBy || c.uploadedBy || 'N/A'}</div>
                 </div>
               );
             })}
@@ -586,8 +652,38 @@ export default function AdminEmailAutomation() {
             </div>
           </div>
 
+          {/* Custom Remarks / Notes */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>Recruiter Remarks / Special Notes (Optional):</span>
+              <span style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 500 }}>Included in email & saved to communication audit logs</span>
+            </label>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="e.g. Candidates Anshu and Rohit are available to join immediately. Notice period: 15 days. Strong hands-on experience in required stack..."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#1e293b',
+                background: '#f8fafc',
+                outline: 'none',
+                boxSizing: 'border-box',
+                resize: 'vertical',
+                lineHeight: 1.5,
+                transition: 'border-color 0.2s ease'
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.background = '#ffffff'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}
+            />
+          </div>
+
           {/* Body */}
-          <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '8px' }}>Body:</label>
+          <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '8px' }}>Body Preview:</label>
           <div style={{
             background: '#fafafa', border: '1px solid #e2e8f0', borderRadius: '10px',
             padding: '20px', fontSize: '13px', lineHeight: '1.6', color: '#334155'

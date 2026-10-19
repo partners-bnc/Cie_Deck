@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { jobService } from '../../services/jobService.js';
 import {
   FiBriefcase,
+  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
   FiEdit2,
@@ -32,6 +33,10 @@ export default function AdminClientJobs() {
     country: 'India',
     payRate: '',
     experience: '',
+    education: "Bachelor's Degree / Any Graduate",
+    vacancy: '1',
+    autoPublishToPortal: true,
+    portalJobId: null,
     jobDescription: '',
     recruitmentManager: '',
     status: 'Active',
@@ -48,7 +53,9 @@ export default function AdminClientJobs() {
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -57,14 +64,15 @@ export default function AdminClientJobs() {
   const [formData, setFormData] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchJobs = async (nextPage = page, nextSearch = searchTerm) => {
+  const fetchJobs = async (nextPage = page, nextSearch = searchTerm, nextStatus = statusFilter) => {
     setLoading(true);
     setError('');
     try {
       const result = await jobService.fetchClientJobsPage({
         page: nextPage,
         pageSize: PAGE_SIZE,
-        search: nextSearch
+        search: nextSearch,
+        status: nextStatus
       });
       setJobs(result.data || []);
       setTotalCount(result.total || 0);
@@ -78,12 +86,12 @@ export default function AdminClientJobs() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (activeTab === 'view') {
-        fetchJobs(page, searchTerm);
+        fetchJobs(page, searchTerm, statusFilter);
       }
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [activeTab, page, searchTerm]);
+  }, [activeTab, page, searchTerm, statusFilter]);
 
   const ensureFormDependencies = async () => {
     const [clientsData, hrsData] = await Promise.all([
@@ -114,6 +122,10 @@ export default function AdminClientJobs() {
       country: job.country || 'India',
       payRate: job.payRate || '',
       experience: job.experience || '',
+      education: job.education || "Bachelor's Degree / Any Graduate",
+      vacancy: job.vacancy || '1',
+      autoPublishToPortal: true,
+      portalJobId: job.portalJobId || null,
       jobDescription: job.jobDescription || '',
       recruitmentManager: job.recruitmentManager || '',
       status: job.status || 'Active',
@@ -265,6 +277,10 @@ export default function AdminClientJobs() {
         setEditingJob(null);
         setActiveTab('view');
         fetchJobs(1, searchTerm);
+        if (result.message) {
+          setSuccessMsg(result.message);
+          setTimeout(() => setSuccessMsg(''), 7000);
+        }
       } else {
         setError(result?.error || 'Failed to save job');
       }
@@ -318,13 +334,14 @@ export default function AdminClientJobs() {
       </div>
 
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        display: 'flex',
         alignItems: 'center',
-        gap: '24px',
-        marginBottom: '32px'
+        justifyContent: 'space-between',
+        gap: '20px',
+        marginBottom: '28px',
+        flexWrap: 'wrap'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', flexShrink: 0 }}>
           <div style={{
             background: '#f1f5f9',
             padding: '6px',
@@ -360,33 +377,91 @@ export default function AdminClientJobs() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, maxWidth: '660px', justifyContent: 'flex-end' }}>
           {activeTab === 'view' ? (
-            <div style={{ position: 'relative', width: '100%', maxWidth: '500px' }}>
-              <FiSearch style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
-              <input
-                type="text"
-                placeholder="Search by Job Code, Title, Client, Location..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPage(1);
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px 14px 12px 48px',
-                  borderRadius: '16px',
-                  border: '2px solid #e2e8f0',
-                  fontSize: '14px',
-                  background: '#fff',
-                  outline: 'none',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-                }}
-              />
-            </div>
+            <>
+              <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+                <FiSearch style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
+                <input
+                  type="text"
+                  placeholder="Search by Job Code, Title, Client, Location..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPage(1);
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '46px',
+                    padding: '0 16px 0 48px',
+                    borderRadius: '16px',
+                    border: '2px solid #e2e8f0',
+                    fontSize: '14px',
+                    background: '#fff',
+                    outline: 'none',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                    boxSizing: 'border-box',
+                    lineHeight: '46px'
+                  }}
+                />
+              </div>
+
+              {/* Status Filter strictly matching search bar design & height */}
+              <div style={{ position: 'relative', width: '160px', flexShrink: 0 }}>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Filter by job status"
+                  style={{
+                    width: '100%',
+                    height: '46px',
+                    padding: '0 36px 0 16px',
+                    borderRadius: '16px',
+                    border: '2px solid #e2e8f0',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: '#334155',
+                    background: '#fff',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                    boxSizing: 'border-box',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none'
+                  }}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Closed">Closed</option>
+                  <option value="On Hold">On Hold</option>
+                </select>
+                <FiChevronDown
+                  size={16}
+                  style={{
+                    position: 'absolute',
+                    right: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#64748b',
+                    pointerEvents: 'none'
+                  }}
+                />
+              </div>
+            </>
           ) : <div />}
         </div>
       </div>
+
+      {successMsg && (
+        <div style={{ padding: '12px 18px', background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '12px', color: '#047857', fontSize: '13.5px', fontWeight: 700, marginBottom: '20px', maxWidth: '800px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>✅</span>
+          <span>{successMsg}</span>
+        </div>
+      )}
 
       {error && (
         <div style={{ padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', color: '#dc2626', fontSize: '13px', marginBottom: '20px', maxWidth: '800px' }}>
@@ -402,7 +477,15 @@ export default function AdminClientJobs() {
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   <th style={{ padding: '16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: '#475569' }}>Actions</th>
                   {['Job Code', 'Job Title', 'Job Type', 'Job Mode', 'Client', 'Location', 'Experience', 'Pay Rate', 'Manager', 'Status', 'Created On'].map((header) => (
-                    <th key={header} style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>
+                    <th key={header} style={{
+                      padding: '16px',
+                      textAlign: 'left',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#475569',
+                      whiteSpace: 'nowrap',
+                      minWidth: header === 'Job Code' ? '120px' : undefined
+                    }}>
                       {header}
                     </th>
                   ))}
@@ -419,7 +502,7 @@ export default function AdminClientJobs() {
                 ) : jobs.length === 0 ? (
                   <tr>
                     <td colSpan={12} style={{ padding: '80px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
-                      {searchTerm ? 'No matches found.' : 'No job postings found. Switch to "Post Job" to create one.'}
+                      {searchTerm || statusFilter !== 'all' ? 'No matches found.' : 'No job postings found. Switch to "Post Job" to create one.'}
                     </td>
                   </tr>
                 ) : jobs.map((job, index) => (
@@ -435,7 +518,16 @@ export default function AdminClientJobs() {
                         </button>
                       </div>
                     </td>
-                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#0f766e', fontWeight: 800 }}>{job.jobCode}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#0f766e', fontWeight: 800, whiteSpace: 'nowrap', minWidth: '120px' }}>
+                      <span style={{ whiteSpace: 'nowrap', display: 'inline-block' }}>{job.jobCode}</span>
+                      {job.portalJobId && (
+                        <div style={{ marginTop: '3px', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: '10px', background: '#ecfdf5', color: '#047857', padding: '1.5px 6px', borderRadius: '4px', border: '1px solid #a7f3d0', fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block' }}>
+                            Portal #{job.portalJobId}
+                          </span>
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '12px 16px', fontSize: '13px', color: '#0f172a', fontWeight: 700 }}>{job.jobTitle}</td>
                     <td style={{ padding: '12px 16px', fontSize: '13px', color: '#475569' }}>{job.jobType || '-'}</td>
                     <td style={{ padding: '12px 16px', fontSize: '13px', color: '#475569' }}>{job.jobMode || '-'}</td>
@@ -671,6 +763,67 @@ export default function AdminClientJobs() {
                     <option value="Medium">Medium</option>
                     <option value="Low">Low</option>
                   </select>
+                </div>
+
+                <div style={{
+                  gridColumn: 'span 2',
+                  background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+                  border: '1.5px solid #a7f3d0',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                      <input
+                        type="checkbox"
+                        name="autoPublishToPortal"
+                        checked={formData.autoPublishToPortal}
+                        onChange={(e) => setFormData(prev => ({ ...prev, autoPublishToPortal: e.target.checked }))}
+                        style={{ width: '18px', height: '18px', accentColor: '#0f766e', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#065f46' }}>
+                        Automatically publish to Portal Job Listing
+                      </span>
+                    </label>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#047857', background: '#d1fae5', padding: '3px 10px', borderRadius: '20px' }}>
+                      🚀 Auto-Post to Careers Portal
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '12.5px', color: '#047857', lineHeight: 1.4 }}>
+                    When checked, saving this JPC will automatically create a matching live job post in the Portal Job Listings with role, location, salary, experience, and JD.
+                  </p>
+
+                  {formData.autoPublishToPortal && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '6px', paddingTop: '12px', borderTop: '1px dashed #a7f3d0' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#065f46', marginBottom: '6px' }}>
+                          Education Qualification (for Portal Post)
+                        </label>
+                        <input
+                          name="education"
+                          value={formData.education}
+                          onChange={handleChange}
+                          placeholder="e.g. B.Tech, MBA or Any Graduate"
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #6ee7b7', fontSize: '13px', boxSizing: 'border-box', background: '#ffffff', outline: 'none' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#065f46', marginBottom: '6px' }}>
+                          No. of Vacancies (for Portal Post)
+                        </label>
+                        <input
+                          name="vacancy"
+                          value={formData.vacancy}
+                          onChange={handleChange}
+                          placeholder="e.g. 1"
+                          style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #6ee7b7', fontSize: '13px', boxSizing: 'border-box', background: '#ffffff', outline: 'none' }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ gridColumn: 'span 2' }}>

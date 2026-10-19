@@ -257,6 +257,13 @@ export default function AdminJobListings() {
               >
                 <td style={{ padding: "14px 18px" }}>
                   <span style={{ padding: "3px 8px", background: "#e8f0ff", color: "#0b2f5b", borderRadius: "6px", fontSize: "12px", fontWeight: 600 }}>#{job.id}</span>
+                  {job.jpcCode && (
+                    <div style={{ marginTop: "4px" }}>
+                      <span style={{ padding: "2px 7px", background: "#f0fdf4", color: "#047857", borderRadius: "4px", fontSize: "11px", fontWeight: 700, border: "1px solid #bbf7d0" }}>
+                        {job.jpcCode}
+                      </span>
+                    </div>
+                  )}
                 </td>
                 <td style={{ padding: "14px 18px" }}>
                   <div style={{ fontWeight: 600, fontSize: "14px", color: "#111827" }}>{job.title}</div>

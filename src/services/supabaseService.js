@@ -2,7 +2,7 @@ import { supabase, SUPABASE_URL } from './supabaseClient.js';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const SUPABASE_PAGE_SIZE = 1000;
-const CACHE_PREFIX = 'bnc_job_cache_v6';
+const CACHE_PREFIX = 'bnc_job_cache_v9';
 const inflightRequests = new Map();
 const cache = {
   jobs: { data: null, timestamp: 0 },
@@ -13,7 +13,8 @@ const cache = {
   clientJobs: { data: null, timestamp: 0 },
   hrs: { data: null, timestamp: 0 },
   dashboardSummary: { data: null, timestamp: 0 },
-  dashboardAnalytics: { data: null, timestamp: 0 }
+  dashboardAnalytics: { data: null, timestamp: 0 },
+  performanceMetrics: { data: null, timestamp: 0 }
 };
 
 const APPLICANT_LIST_COLUMNS = [
@@ -311,6 +312,20 @@ function applyApplicantFilters(query, options = {}) {
 }
 
 function mapShortlistRow(s) {
+  let hist = [];
+  if (Array.isArray(s.interview_history)) {
+    hist = s.interview_history;
+  } else if (typeof s.interview_history === 'string') {
+    try {
+      hist = JSON.parse(s.interview_history);
+      if (!Array.isArray(hist)) hist = [];
+    } catch (e) {
+      hist = [];
+    }
+  }
+
+  const latestInterview = hist.length > 0 ? hist[hist.length - 1] : null;
+
   return {
     applicantId: s.applicant_code || '',
     name: s.name || '',
@@ -320,6 +335,11 @@ function mapShortlistRow(s) {
     date: s.created_at || null,
     jobCode: s.job_code || '',
     currentStage: s.current_stage || 'Pipeline',
+    stageOutcome: s.stage_outcome || 'In Progress',
+    rejectionReason: s.rejection_reason || latestInterview?.rejection_reason || '',
+    interviewHistory: hist,
+    scheduledAt: latestInterview?.scheduled_at || null,
+    stageNotes: latestInterview?.notes || '',
     managerSubmittedAt: s.manager_submitted_at || null,
     clientSubmittedAt: s.client_submitted_at || null,
     feedbackReceivedAt: s.feedback_received_at || null,
@@ -382,6 +402,7 @@ function mapClientJobRow(j) {
     reportingClientName: j.reporting_client_name || '',
     reportingClientEmail: j.reporting_client_email || '',
     reportingClientContact: j.reporting_client_contact || '',
+    portalJobId: j.portal_job_id || null,
   };
 }
 
@@ -464,7 +485,7 @@ export const jobService = {
       // Fetch admin profile
       const { data: admin, error: adminError } = await supabase
         .from('admin_users')
-        .select('hr_name, email, role, designation')
+        .select('hr_name, email, role, designation, avatar_url')
         .eq('auth_id', data.user.id)
         .eq('is_active', true)
         .single();
@@ -480,6 +501,7 @@ export const jobService = {
         hrName: admin.hr_name,
         role: admin.role,
         designation: admin.designation,
+        avatarUrl: admin.avatar_url || null,
       };
     } catch (error) {
       return { error: error.toString() };
@@ -504,7 +526,7 @@ export const jobService = {
       return await withCache('jobs', async () => {
         const { data, error } = await supabase
           .from('jobs')
-          .select('id, job_id, title, location, job_type, experience, salary, education, vacancy, gender, description, created_at, updated_at')
+          .select('*')
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
@@ -514,6 +536,7 @@ export const jobService = {
           type: j.job_type, experience: j.experience, salary: j.salary,
           education: j.education, vacancy: j.vacancy, gender: j.gender,
           description: j.description, company: 'BnC Global',
+          jpcCode: j.jpc_code || null,
           _uuid: j.id,
           created_at: j.created_at,
           updated_at: j.updated_at
@@ -538,6 +561,7 @@ export const jobService = {
         type: data.job_type, experience: data.experience, salary: data.salary,
         education: data.education, vacancy: data.vacancy, gender: data.gender,
         description: data.description, company: 'BnC Global', _uuid: data.id,
+        jpcCode: data.jpc_code || null,
         created_at: data.created_at,
         updated_at: data.updated_at,
         responsibilities: [
@@ -561,13 +585,31 @@ export const jobService = {
 
   async addJob(jobData) {
     try {
-      const { data, error } = await supabase.from('jobs').insert({
-        title: jobData.title || '', location: jobData.location || '',
-        job_type: jobData.type || '', experience: jobData.experience || '',
-        salary: jobData.salary || '', education: jobData.education || '',
-        vacancy: jobData.vacancy || '', gender: jobData.gender || '',
+      const basePayload = {
+        title: jobData.title || '',
+        location: jobData.location || '',
+        job_type: jobData.type || '',
+        experience: jobData.experience || '',
+        salary: jobData.salary || '',
+        education: jobData.education || '',
+        vacancy: jobData.vacancy || '',
+        gender: jobData.gender || '',
         description: jobData.description || '',
-      }).select('job_id').single();
+      };
+
+      let insertPayload = { ...basePayload };
+      if (jobData.jpc_code) {
+        insertPayload.jpc_code = jobData.jpc_code;
+      }
+
+      let { data, error } = await supabase.from('jobs').insert(insertPayload).select('job_id').single();
+
+      // Graceful fallback if jpc_code column doesn't exist yet in Supabase
+      if (error && error.message && error.message.toLowerCase().includes('jpc_code')) {
+        const fallback = await supabase.from('jobs').insert(basePayload).select('job_id').single();
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) return { error: error.message };
       this.clearCache('jobs');
@@ -1168,10 +1210,52 @@ export const jobService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return { success: true, data };
+      // Filter out automated pipeline updates AND automated client/manager submission email logs
+      // Communication logs must ONLY contain direct recruiter-to-candidate interactions!
+      const cleanData = (data || []).filter(item => {
+        if (item.communication_type === 'Pipeline Update') return false;
+        const notes = item.notes || '';
+        if (
+          notes.startsWith('[Client Submission') ||
+          notes.startsWith('[Manager Submit') ||
+          notes.startsWith('[Manager Submission') ||
+          notes.startsWith('[Stage:')
+        ) {
+          return false;
+        }
+        return true;
+      });
+      return { success: true, data: cleanData };
     } catch (error) {
       console.error('Error fetching communication logs:', error);
       return { success: false, error: error.toString(), data: [] };
+    }
+  },
+
+  async getApplicantJobPipelines(applicantCode) {
+    if (!applicantCode) return [];
+    try {
+      let { data, error } = await supabase
+        .from('tagged_candidates')
+        .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at, stage_outcome, rejection_reason, interview_history')
+        .eq('applicant_code', applicantCode)
+        .order('created_at', { ascending: false });
+
+      if (error && (error.code === '42703' || error.message?.includes('does not exist'))) {
+        const fallback = await supabase
+          .from('tagged_candidates')
+          .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at')
+          .eq('applicant_code', applicantCode)
+          .order('created_at', { ascending: false });
+        data = fallback.data;
+        error = fallback.error;
+      }
+
+      if (error) throw error;
+      return (data || []).map(mapShortlistRow);
+    } catch (error) {
+      console.error('Error fetching applicant job pipelines:', error);
+      return [];
     }
   },
 
@@ -1310,9 +1394,17 @@ export const jobService = {
   async getShortlistedCandidates() {
     try {
       return await withCache('shortlisted', async () => {
-        const { data, error } = await supabase.from('tagged_candidates')
-          .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at')
+        let { data, error } = await supabase.from('tagged_candidates')
+          .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at, stage_outcome, rejection_reason, interview_history')
           .order('created_at', { ascending: false });
+
+        if (error && (error.code === '42703' || error.message?.includes('does not exist'))) {
+          const fallback = await supabase.from('tagged_candidates')
+            .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at')
+            .order('created_at', { ascending: false });
+          data = fallback.data;
+          error = fallback.error;
+        }
 
         if (error) throw error;
         return (data || []).map(mapShortlistRow);
@@ -1465,11 +1557,21 @@ export const jobService = {
     if (!jobCode) return [];
 
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('tagged_candidates')
-        .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at')
+        .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at, stage_outcome, rejection_reason, interview_history')
         .eq('job_code', jobCode)
         .order('created_at', { ascending: false });
+
+      if (error && (error.code === '42703' || error.message?.includes('does not exist'))) {
+        const fallback = await supabase
+          .from('tagged_candidates')
+          .select('id, applicant_code, name, job_role, company, shortlisted_by, created_at, job_code, current_stage, manager_submitted_at, client_submitted_at, feedback_received_at')
+          .eq('job_code', jobCode)
+          .order('created_at', { ascending: false });
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) throw error;
       const jobContacts = await fetchJobContactsByCodes([jobCode]);
@@ -1483,24 +1585,188 @@ export const jobService = {
     }
   },
 
-  async updateShortlistStage(applicantId, jobCode, stage) {
+  async updateShortlistStage(applicantId, jobCode, stage, stageDetails = {}) {
     try {
       const updateData = { current_stage: stage };
       const now = new Date().toISOString();
       if (stage === 'Manager Submit') updateData.manager_submitted_at = now;
       if (stage === 'Client Submission') updateData.client_submitted_at = now;
-      if (stage === 'Feedback') updateData.feedback_received_at = now;
+      if (stage === 'Feedback' || stage.includes('Interview') || stage.includes('Cleared') || stage.includes('Rejected') || stage.includes('Hired') || stage.includes('Hold')) {
+        updateData.feedback_received_at = now;
+      }
 
-      const { error } = await supabase.from('tagged_candidates')
+      // Fetch existing row to retrieve interview_history and append the new round
+      const { data: existingRows } = await supabase
+        .from('tagged_candidates')
+        .select('interview_history, rejection_reason')
+        .eq('applicant_code', applicantId)
+        .eq('job_code', jobCode);
+
+      let historyList = [];
+      const existingRecord = existingRows?.[0];
+      if (existingRecord?.interview_history) {
+        if (Array.isArray(existingRecord.interview_history)) {
+          historyList = [...existingRecord.interview_history];
+        } else if (typeof existingRecord.interview_history === 'string') {
+          try {
+            historyList = JSON.parse(existingRecord.interview_history);
+            if (!Array.isArray(historyList)) historyList = [];
+          } catch (e) {
+            historyList = [];
+          }
+        }
+      } else if (Array.isArray(stageDetails.existingHistory)) {
+        historyList = [...stageDetails.existingHistory];
+      }
+
+      const hrUser = sessionStorage.getItem('bnc_admin_name') || sessionStorage.getItem('bnc_admin_id') || 'HR Admin';
+
+      // Always create a new entry for this update to capture the round progression, date, and comment
+      const newEntry = {
+        round: stage,
+        stage: stage,
+        status: stage.includes('Reject') ? 'Rejected' : (stage.includes('Cleared') ? 'Cleared' : (stage === 'Hired' ? 'Hired' : (stage === 'On Hold' ? 'On Hold' : 'Scheduled'))),
+        scheduled_at: stageDetails.scheduledAt || null,
+        notes: stageDetails.notes || '',
+        rejection_reason: stageDetails.rejectionReason || null,
+        updated_by: hrUser,
+        updated_at: now
+      };
+      historyList.push(newEntry);
+
+      updateData.interview_history = historyList;
+      updateData.stage_outcome = stage.includes('Reject') ? 'Rejected' : (stage === 'Hired' ? 'Hired' : (stage === 'On Hold' ? 'On Hold' : 'In Progress'));
+      if (stageDetails.rejectionReason) {
+        updateData.rejection_reason = stageDetails.rejectionReason;
+      }
+
+      let { error } = await supabase.from('tagged_candidates')
         .update(updateData)
         .eq('applicant_code', applicantId)
         .eq('job_code', jobCode);
       
+      // Fallback if schema does not yet have extended columns
+      if (error && (error.code === '42703' || error.message?.includes('does not exist'))) {
+        const safeData = { current_stage: stage };
+        if (stage === 'Manager Submit') safeData.manager_submitted_at = now;
+        if (stage === 'Client Submission') safeData.client_submitted_at = now;
+        if (stage === 'Feedback' || stage.includes('Interview') || stage.includes('Cleared') || stage.includes('Rejected') || stage.includes('Hired') || stage.includes('Hold')) {
+          safeData.feedback_received_at = now;
+        }
+        const retry = await supabase.from('tagged_candidates')
+          .update(safeData)
+          .eq('applicant_code', applicantId)
+          .eq('job_code', jobCode);
+        error = retry.error;
+      }
+
       if (error) throw error;
+
+      // If marked Hired, update the master applicant status as Hired
+      if (stage === 'Hired') {
+        await supabase.from('applicants').update({ status: 'Hired' }).eq('applicant_code', applicantId);
+      }
+      // Note: If Client Rejected for this JPC, we do NOT set global applicant status to Rejected.
+      // The candidate remains in database / eligible for other companies and JPCs!
+
       this.clearCache('shortlisted');
+      this.clearCache('performanceMetrics');
+      return { success: true, history: historyList };
+    } catch (error) {
+      console.error('Error updating shortlist stage:', error);
+      return { error: error.toString() };
+    }
+  },
+
+  async logEmailCommunication(logData) {
+    try {
+      const emailRecord = {
+        job_code: logData.jobCode || '',
+        submission_type: logData.submissionType || 'Client Submission',
+        recipient_email: logData.recipientEmail || '',
+        recipient_name: logData.recipientName || '',
+        subject: logData.subject || '',
+        remarks: logData.remarks || '',
+        candidates_count: logData.candidatesCount || (logData.candidatesSnapshot?.length || 0),
+        candidates_snapshot: logData.candidatesSnapshot || [],
+        sent_by: logData.sentBy || sessionStorage.getItem('bnc_admin_name') || 'HR Admin',
+        status: logData.status || 'Sent',
+        error_message: logData.errorMessage || null,
+        email_html_snippet: (logData.htmlContent || '').slice(0, 1500)
+      };
+
+      // 1. Attempt insert into email_logs table
+      const { data } = await supabase.from('email_logs').insert(emailRecord).select();
+
+      // 2. Fallback client-side cache so logs are instantly visible in the UI
+      try {
+        const localKey = `bnc_email_logs_${logData.jobCode}`;
+        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
+        const newLocalLog = {
+          id: data?.[0]?.id || `log-${Date.now()}`,
+          jobCode: emailRecord.job_code,
+          submissionType: emailRecord.submission_type,
+          recipientEmail: emailRecord.recipient_email,
+          recipientName: emailRecord.recipient_name,
+          subject: emailRecord.subject,
+          remarks: emailRecord.remarks,
+          candidatesCount: emailRecord.candidates_count,
+          candidatesSnapshot: emailRecord.candidates_snapshot,
+          sentBy: emailRecord.sent_by,
+          sentAt: new Date().toISOString(),
+          status: emailRecord.status
+        };
+        localStorage.setItem(localKey, JSON.stringify([newLocalLog, ...existing]));
+      } catch (e) {
+        // ignore storage errors
+      }
+
       return { success: true };
     } catch (error) {
-      return { error: error.toString() };
+      console.error('Error logging email communication:', error);
+      return { success: false, error: error.toString() };
+    }
+  },
+
+  async fetchEmailLogsByJob(jobCode) {
+    if (!jobCode) return [];
+    try {
+      // 1. Try fetching from Supabase email_logs
+      const { data, error } = await supabase
+        .from('email_logs')
+        .select('*')
+        .eq('job_code', jobCode)
+        .order('sent_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return data.map(d => ({
+          id: d.id,
+          jobCode: d.job_code,
+          submissionType: d.submission_type,
+          recipientEmail: d.recipient_email,
+          recipientName: d.recipient_name,
+          subject: d.subject,
+          remarks: d.remarks || '',
+          candidatesCount: d.candidates_count || 0,
+          candidatesSnapshot: d.candidates_snapshot || [],
+          sentBy: d.sent_by || 'HR Admin',
+          sentAt: d.sent_at || d.created_at,
+          status: d.status || 'Sent'
+        }));
+      }
+
+      // 2. Fallback to localStorage cache
+      const localKey = `bnc_email_logs_${jobCode}`;
+      const localLogs = JSON.parse(localStorage.getItem(localKey) || '[]');
+      return localLogs;
+    } catch (err) {
+      console.warn('fetchEmailLogsByJob fallback to local cache:', err);
+      try {
+        const localKey = `bnc_email_logs_${jobCode}`;
+        return JSON.parse(localStorage.getItem(localKey) || '[]');
+      } catch {
+        return [];
+      }
     }
   },
 
@@ -1674,14 +1940,51 @@ export const jobService = {
     try {
       return await withCache('hrs', async () => {
         const { data, error } = await supabase.from('admin_users')
-          .select('hr_name, email').eq('is_active', true);
+          .select('hr_name, email, avatar_url').eq('is_active', true);
 
         if (error) throw error;
-        return (data || []).map(h => ({ hrName: h.hr_name, email: h.email }));
+        return (data || []).map(h => ({ 
+          hrName: h.hr_name, 
+          email: h.email,
+          avatarUrl: h.avatar_url || ''
+        }));
       });
     } catch (error) {
       console.error('Error fetching HRs:', error);
       return [];
+    }
+  },
+
+  async fetchHRAvatarMap() {
+    try {
+      return await withCache('hr_avatar_map', async () => {
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('hr_name, email, avatar_url');
+
+        if (error) throw error;
+        const map = {};
+        (data || []).forEach(u => {
+          if (u.avatar_url) {
+            if (u.hr_name) {
+              const nameLower = u.hr_name.trim().toLowerCase();
+              map[nameLower] = u.avatar_url;
+              const firstName = nameLower.split(' ')[0];
+              if (firstName && !map[firstName]) map[firstName] = u.avatar_url;
+            }
+            if (u.email) {
+              const emailLower = u.email.trim().toLowerCase();
+              map[emailLower] = u.avatar_url;
+              const userPart = emailLower.split('@')[0];
+              if (userPart && !map[userPart]) map[userPart] = u.avatar_url;
+            }
+          }
+        });
+        return map;
+      });
+    } catch (error) {
+      console.error('Error fetching HR avatar map:', error);
+      return {};
     }
   },
 
@@ -1708,13 +2011,18 @@ export const jobService = {
     const {
       page = 1,
       pageSize = 25,
-      search = ''
+      search = '',
+      status = 'all'
     } = options;
 
     try {
       let query = supabase
         .from('client_jobs')
         .select('id, job_code, job_title, job_type, job_mode, business_unit, client_name, client_id, location, state, country, pay_rate, experience, created_by, created_on, recruitment_manager, status, modified_on, modified_by, priority, assigned_to, reporting_client_name, reporting_client_email, reporting_client_contact', { count: 'exact' });
+
+      if (status && status !== 'all') {
+        query = query.ilike('status', status);
+      }
 
       const searchFilter = buildIlikeOrFilter(
         ['job_code', 'job_title', 'job_type', 'job_mode', 'client_name', 'recruitment_manager', 'location', 'state', 'country'],
@@ -1813,14 +2121,19 @@ export const jobService = {
     }
   },
 
-  async fetchActiveClientJobsPreview(limit = 6) {
+  async fetchActiveClientJobsPreview(limit = null) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('client_jobs')
         .select('job_code, job_title, client_name, created_by, status')
-        .eq('status', 'Active')
-        .order('created_on', { ascending: false })
-        .limit(limit);
+        .or('status.eq.Active,status.eq.active,status.ilike.%active%')
+        .order('created_on', { ascending: false });
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data || []).map(j => ({
@@ -1864,9 +2177,9 @@ export const jobService = {
           supabase.from('applicants').select('*', { count: 'exact', head: true }).gte('created_on', monthStart),
           supabase.from('tagged_candidates').select('*', { count: 'exact', head: true }),
           supabase.from('clients').select('*', { count: 'exact', head: true }),
-          supabase.from('client_jobs').select('*', { count: 'exact', head: true }).eq('status', 'Active'),
+          supabase.from('client_jobs').select('*', { count: 'exact', head: true }).or('status.eq.Active,status.eq.active,status.ilike.%active%'),
           this.fetchRecentCandidates(5),
-          this.fetchActiveClientJobsPreview(6)
+          this.fetchActiveClientJobsPreview(null)
         ]);
 
         return {
@@ -1917,7 +2230,7 @@ export const jobService = {
             .from('dashboard_source_stats')
             .select('source, candidate_count')
             .order('candidate_count', { ascending: false }),
-          fetchAllLightweightRows('tagged_candidates', 'job_code')
+          fetchAllLightweightRows('tagged_candidates', 'job_code, current_stage')
         ]);
 
         if (hrStatsRes.error) throw hrStatsRes.error;
@@ -1936,7 +2249,8 @@ export const jobService = {
             value: row.candidate_count || 0
           })),
           shortlisted: (taggedJobsData || []).map(item => ({
-            jobCode: item.job_code || ''
+            jobCode: item.job_code || '',
+            currentStage: item.current_stage || 'Pipeline'
           })),
           clientJobs: [],
           commLogs: []
@@ -1951,6 +2265,137 @@ export const jobService = {
         clientJobs: [],
         commLogs: []
       };
+    }
+  },
+
+  async fetchDashboardPerformanceMetrics() {
+    try {
+      return await withCache('performanceMetrics', async () => {
+        const [clientsRes, clientJobsRes, hiredApplicantsRes, hiredTaggedRes, hiredCandidatesRes, hrsList] = await Promise.all([
+          supabase
+            .from('clients')
+            .select('client_id, client_name, industry, business_unit, status, created_by, created_on')
+            .order('created_on', { ascending: false }),
+          supabase
+            .from('client_jobs')
+            .select('job_code, job_title, client_name, business_unit, status, created_by, created_on')
+            .order('created_on', { ascending: false }),
+          supabase
+            .from('applicants')
+            .select('id, applicant_code, full_name, email, job_applied_for, uploaded_by, status, created_on')
+            .or('status.ilike.%hired%,status.ilike.%closure%,status.ilike.%joined%,status.ilike.%offered%'),
+          supabase
+            .from('tagged_candidates')
+            .select('id, applicant_code, name, job_code, current_stage, shortlisted_by, created_at')
+            .or('current_stage.ilike.%hired%,current_stage.ilike.%closure%,current_stage.ilike.%joined%,current_stage.ilike.%offered%'),
+          supabase
+            .from('candidates')
+            .select('id, name, email, job_applied, status, timestamp')
+            .or('status.ilike.%hired%,status.ilike.%closure%,status.ilike.%joined%,status.ilike.%offered%'),
+          this.fetchHRs()
+        ]);
+
+        const clients = (clientsRes.data || []).map(c => ({
+          clientId: c.client_id || '',
+          clientName: c.client_name || '',
+          industry: c.industry || '',
+          businessUnit: c.business_unit || '',
+          status: c.status || 'Active',
+          createdBy: c.created_by || 'Admin',
+          createdOn: c.created_on || ''
+        }));
+
+        const clientJobs = (clientJobsRes.data || []).map(j => ({
+          jobCode: j.job_code || '',
+          jobTitle: j.job_title || '',
+          clientName: j.client_name || '',
+          businessUnit: j.business_unit || '',
+          status: j.status || 'Active',
+          createdBy: j.created_by || 'Admin',
+          createdOn: j.created_on || ''
+        }));
+
+        // Deduplicate closures by applicant code / email / id
+        const seenClosureIds = new Set();
+        const closures = [];
+
+        // 1. Tagged candidates (most specific: contains job_code and shortlisted_by)
+        (hiredTaggedRes.data || []).forEach(t => {
+          const key = (t.applicant_code || t.id || t.name || '').toLowerCase().trim();
+          if (key && !seenClosureIds.has(key)) {
+            seenClosureIds.add(key);
+            closures.push({
+              id: t.id || t.applicant_code,
+              candidateName: t.name || 'Candidate',
+              role: t.job_code || 'Position',
+              employee: t.shortlisted_by || 'HR',
+              status: t.current_stage || 'Hired',
+              date: t.created_at || ''
+            });
+          }
+        });
+
+        // 2. Applicants
+        (hiredApplicantsRes.data || []).forEach(a => {
+          const key = (a.applicant_code || a.email || a.id || '').toLowerCase().trim();
+          if (key && !seenClosureIds.has(key)) {
+            seenClosureIds.add(key);
+            closures.push({
+              id: a.id || a.applicant_code,
+              candidateName: a.full_name || 'Candidate',
+              role: a.job_applied_for || 'Position',
+              employee: a.uploaded_by || 'HR',
+              status: a.status || 'Hired',
+              date: a.created_on || ''
+            });
+          }
+        });
+
+        // 3. Candidates table
+        (hiredCandidatesRes.data || []).forEach(c => {
+          const key = (c.email || c.id || c.name || '').toLowerCase().trim();
+          if (key && !seenClosureIds.has(key)) {
+            seenClosureIds.add(key);
+            closures.push({
+              id: c.id,
+              candidateName: c.name || 'Candidate',
+              role: c.job_applied || 'Position',
+              employee: 'HR',
+              status: c.status || 'Hired',
+              date: c.timestamp || ''
+            });
+          }
+        });
+
+        const hrAvatarMap = {};
+        (hrsList || []).forEach(h => {
+          if (h.avatarUrl) {
+            const nameLower = (h.hrName || '').trim().toLowerCase();
+            const emailLower = (h.email || '').trim().toLowerCase();
+            if (nameLower) {
+              hrAvatarMap[nameLower] = h.avatarUrl;
+              const first = nameLower.split(' ')[0];
+              if (first && !hrAvatarMap[first]) hrAvatarMap[first] = h.avatarUrl;
+            }
+            if (emailLower) {
+              hrAvatarMap[emailLower] = h.avatarUrl;
+              const userPart = emailLower.split('@')[0];
+              if (userPart && !hrAvatarMap[userPart]) hrAvatarMap[userPart] = h.avatarUrl;
+            }
+          }
+        });
+
+        return {
+          clients,
+          clientJobs,
+          closures,
+          hrs: hrsList || [],
+          hrAvatarMap
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard performance metrics:', error);
+      return { clients: [], clientJobs: [], closures: [], hrs: [] };
     }
   },
 
@@ -1982,7 +2427,59 @@ export const jobService = {
 
       if (error) return { error: error.message };
       this.clearCache('clientJobs');
-      return { success: true, jobCode: data.job_code, message: 'Client Job added successfully' };
+
+      // Automatically create a matching Portal Job Listing if enabled (default true)
+      let portalJobId = null;
+      if (jobData.autoPublishToPortal !== false) {
+        try {
+          const city = (jobData.location || '').trim();
+          const state = (jobData.state || '').trim();
+          const country = (jobData.country || 'India').trim();
+          const fullLocation = [city, state, country].filter(Boolean).join(', ');
+
+          let mappedType = (jobData.jobType || 'Full-time').trim();
+          if (mappedType.toLowerCase() === 'full time') mappedType = 'Full-time';
+          if (mappedType.toLowerCase() === 'part time') mappedType = 'Part-time';
+          if (jobData.jobMode && ['Remote', 'Hybrid'].includes(jobData.jobMode)) {
+            mappedType = `${mappedType} (${jobData.jobMode})`;
+          }
+
+          const portalResult = await this.addJob({
+            title: jobData.jobTitle || 'Requisition Role',
+            location: fullLocation || 'India',
+            type: mappedType,
+            experience: jobData.experience || '',
+            salary: jobData.payRate || '',
+            education: jobData.education || "Bachelor's Degree / Any Graduate",
+            vacancy: (jobData.vacancy || '1').toString(),
+            gender: jobData.gender || 'All',
+            description: jobData.jobDescription || '',
+            jpc_code: data.job_code || jobData.jobCode
+          });
+
+          if (portalResult?.success && portalResult.jobId) {
+            portalJobId = portalResult.jobId;
+            try {
+              await supabase.from('client_jobs')
+                .update({ portal_job_id: portalJobId })
+                .eq('job_code', data.job_code);
+            } catch (linkErr) {
+              // Non-blocking if portal_job_id column isn't created yet
+            }
+          }
+        } catch (portalErr) {
+          console.warn('Auto portal job creation error:', portalErr);
+        }
+      }
+
+      return {
+        success: true,
+        jobCode: data.job_code,
+        portalJobId,
+        message: portalJobId
+          ? `Client JPC ${data.job_code} created and published to Portal Job Listings (ID: #${portalJobId})!`
+          : `Client JPC ${data.job_code} created successfully.`
+      };
     } catch (error) {
       return { error: error.toString() };
     }
@@ -2011,6 +2508,48 @@ export const jobService = {
         const idx = cache.clientJobs.data.findIndex(c => c.jobCode === jobData.jobCode);
         if (idx !== -1) cache.clientJobs.data[idx] = { ...cache.clientJobs.data[idx], ...jobData };
       }
+
+      // Synchronize linked portal job post
+      try {
+        const city = (jobData.location || '').trim();
+        const state = (jobData.state || '').trim();
+        const country = (jobData.country || 'India').trim();
+        const fullLocation = [city, state, country].filter(Boolean).join(', ');
+
+        let mappedType = (jobData.jobType || 'Full-time').trim();
+        if (mappedType.toLowerCase() === 'full time') mappedType = 'Full-time';
+        if (mappedType.toLowerCase() === 'part time') mappedType = 'Part-time';
+        if (jobData.jobMode && ['Remote', 'Hybrid'].includes(jobData.jobMode)) {
+          mappedType = `${mappedType} (${jobData.jobMode})`;
+        }
+
+        // Look up by jpc_code or portal_job_id
+        if (jobData.jobCode) {
+          const { data: linkedJob } = await supabase
+            .from('jobs')
+            .select('job_id')
+            .eq('jpc_code', jobData.jobCode)
+            .maybeSingle();
+
+          const isActive = jobData.status ? jobData.status.toLowerCase() === 'active' : true;
+
+          if (linkedJob?.job_id) {
+            await supabase.from('jobs').update({
+              title: jobData.jobTitle,
+              location: fullLocation || 'India',
+              job_type: mappedType,
+              experience: jobData.experience,
+              salary: jobData.payRate,
+              description: jobData.jobDescription,
+              is_active: isActive
+            }).eq('job_id', linkedJob.job_id);
+            this.clearCache('jobs');
+          }
+        }
+      } catch (syncErr) {
+        console.warn('Error syncing updated JPC to portal job:', syncErr);
+      }
+
       return { success: true, message: 'Client Job updated successfully' };
     } catch (error) {
       return { error: error.toString() };
@@ -2070,10 +2609,95 @@ export const jobService = {
       });
       const data = await res.json();
       if (data.error) return { error: data.error };
+
+      // If an avatar file was provided during admin creation, upload it now
+      if (adminData.avatarFile) {
+        try {
+          const { data: newAdmin } = await supabase
+            .from('admin_users')
+            .select('id')
+            .eq('email', adminData.email.toLowerCase().trim())
+            .maybeSingle();
+
+          if (newAdmin?.id) {
+            await this.uploadAdminAvatar(newAdmin.id, adminData.avatarFile);
+          }
+        } catch (avatarErr) {
+          console.warn('Admin created, but avatar upload failed:', avatarErr);
+        }
+      }
+
       this.clearCache('hrs');
       return { success: true };
     } catch (error) {
       return { error: error.toString() };
+    }
+  },
+
+  async uploadAdminAvatar(adminId, file, options = {}) {
+    try {
+      if (!adminId || !file) {
+        return { success: false, error: 'Admin ID and photo file are required.' };
+      }
+
+      // 1. Check existing record
+      const { data: existing, error: fetchErr } = await supabase
+        .from('admin_users')
+        .select('id, hr_name, email, avatar_url')
+        .eq('id', adminId)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+
+      // 2. Prepare file path in admin-avatars bucket
+      const rawExt = (file.name ? file.name.split('.').pop() : 'jpg').toLowerCase();
+      const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
+      const fileName = `hr_${adminId}_${Date.now()}.${safeExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // 3. Upload to Supabase storage bucket 'admin-avatars'
+      const { error: uploadErr } = await supabase.storage
+        .from('admin-avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || `image/${safeExt}`
+        });
+
+      if (uploadErr) {
+        throw new Error(`Storage upload failed: ${uploadErr.message}`);
+      }
+
+      // 4. Retrieve public URL
+      const { data: urlData } = supabase.storage
+        .from('admin-avatars')
+        .getPublicUrl(filePath);
+
+      const avatarUrl = urlData?.publicUrl;
+      if (!avatarUrl) throw new Error('Failed to generate public URL for avatar');
+
+      // 5. Link avatar_url in admin_users table
+      const { error: updateErr } = await supabase
+        .from('admin_users')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', adminId);
+
+      if (updateErr) {
+        throw new Error(`Database update failed: ${updateErr.message}`);
+      }
+
+      this.clearCache('hrs');
+
+      // Sync active session if the current user just had their avatar uploaded
+      const currentEmail = sessionStorage.getItem('bnc_admin_email');
+      if (existing.email && currentEmail && existing.email.toLowerCase() === currentEmail.toLowerCase()) {
+        sessionStorage.setItem('bnc_admin_avatar', avatarUrl);
+      }
+
+      return { success: true, avatarUrl };
+    } catch (error) {
+      console.error('Error uploading admin avatar:', error);
+      return { success: false, error: error.message || error.toString() };
     }
   },
 

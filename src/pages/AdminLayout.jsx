@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { jobService } from "../services/jobService.js";
 
@@ -119,6 +119,12 @@ export default function AdminLayout() {
   const adminId = sessionStorage.getItem("bnc_admin_name") || sessionStorage.getItem("bnc_admin_id") || "Admin";
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  useEffect(() => {
+    const handleCloseSidebar = () => setSidebarOpen(false);
+    window.addEventListener("collapse-admin-sidebar", handleCloseSidebar);
+    return () => window.removeEventListener("collapse-admin-sidebar", handleCloseSidebar);
+  }, []);
+
   const handleLogout = async () => {
     await jobService.adminLogout();
     sessionStorage.removeItem("bnc_admin_auth");
@@ -126,6 +132,7 @@ export default function AdminLayout() {
     sessionStorage.removeItem("bnc_admin_email");
     sessionStorage.removeItem("bnc_admin_name");
     sessionStorage.removeItem("bnc_admin_role");
+    sessionStorage.removeItem("bnc_admin_avatar");
     navigate("/admin/login");
   };
 
@@ -156,6 +163,20 @@ export default function AdminLayout() {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
         }
+
+        /* Liquid Glassmorphism Floating Mesh Animations */
+        @keyframes liquidOrb1 {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          50% { transform: translate(14px, 22px) scale(1.1); }
+        }
+        @keyframes liquidOrb2 {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          50% { transform: translate(-16px, -18px) scale(1.14); }
+        }
+        @keyframes liquidOrb3 {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          50% { transform: translate(12px, -15px) scale(0.95); }
+        }
       `}</style>
       {/* Sidebar */}
       <aside style={{
@@ -163,32 +184,50 @@ export default function AdminLayout() {
         top: 0,
         height: "100vh",
         width: sidebarOpen ? "240px" : "72px",
-        background: "linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)", // Light Sky Blue Gradient
+        background: "linear-gradient(155deg, rgba(255, 255, 255, 0.72) 0%, rgba(224, 242, 254, 0.58) 32%, rgba(186, 230, 253, 0.42) 68%, rgba(240, 249, 255, 0.68) 100%)",
+        backdropFilter: "blur(28px) saturate(190%)",
+        WebkitBackdropFilter: "blur(28px) saturate(190%)",
         display: "flex", flexDirection: "column",
         transition: "width 0.25s ease",
         userSelect: "none", flexShrink: 0,
-        boxShadow: "10px 0 40px rgba(11, 47, 91, 0.08)",
+        boxShadow: "12px 0 45px rgba(15, 45, 82, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.95), inset -1px 0 1px rgba(255, 255, 255, 0.6)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.85)",
         borderTopRightRadius: "32px",
         borderBottomRightRadius: "32px",
         zIndex: 10,
         overflow: "hidden"
       }}>
-        {/* Sidebar Background Glows - Light Blue Theme */}
+        {/* Liquid Glass Background Caustics & Glowing Fluid Meshes */}
         <div style={{
-          position: "absolute", top: "-40px", left: "-40px", width: "160px", height: "160px", borderRadius: "50%",
-          background: "radial-gradient(circle at 30% 30%, #ecfeff 0%, transparent 70%)",
-          opacity: 0.8, zIndex: -1, pointerEvents: "none", filter: "blur(20px)"
+          position: "absolute", top: "-50px", left: "-30px", width: "210px", height: "210px", borderRadius: "50%",
+          background: "radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.95) 0%, rgba(186, 230, 253, 0.6) 45%, rgba(125, 211, 252, 0.2) 75%, transparent 90%)",
+          opacity: 0.85, zIndex: 0, pointerEvents: "none", filter: "blur(26px)",
+          animation: "liquidOrb1 9s ease-in-out infinite"
         }} />
         <div style={{
-          position: "absolute", bottom: "15%", right: "-20px", width: "130px", height: "130px", borderRadius: "50%",
-          background: "radial-gradient(circle at 50% 50%, #ffffff 0%, transparent 75%)",
-          opacity: 0.6, zIndex: -1, pointerEvents: "none", filter: "blur(20px)"
+          position: "absolute", top: "35%", right: "-40px", width: "200px", height: "250px", borderRadius: "50%",
+          background: "radial-gradient(circle at 50% 50%, rgba(147, 197, 253, 0.45) 0%, rgba(199, 210, 254, 0.25) 50%, transparent 80%)",
+          opacity: 0.75, zIndex: 0, pointerEvents: "none", filter: "blur(32px)",
+          animation: "liquidOrb2 12s ease-in-out infinite"
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-30px", left: "-20px", width: "220px", height: "220px", borderRadius: "50%",
+          background: "radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.9) 0%, rgba(186, 230, 253, 0.55) 45%, rgba(125, 211, 252, 0.15) 75%, transparent 90%)",
+          opacity: 0.85, zIndex: 0, pointerEvents: "none", filter: "blur(24px)",
+          animation: "liquidOrb3 10s ease-in-out infinite"
+        }} />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 65%, rgba(255, 255, 255, 0.2) 100%)",
+          pointerEvents: "none", zIndex: 0
         }} />
 
         {/* Brand */}
         <div style={{
+          position: "relative", zIndex: 1,
           padding: sidebarOpen ? "18px 18px 14px" : "18px 12px 14px",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.65)",
+          boxShadow: "0 1px 0 rgba(14, 165, 233, 0.04)",
           display: "flex", alignItems: "center", justifyContent: sidebarOpen ? "space-between" : "center", gap: "12px"
         }}>
           {sidebarOpen ? (
@@ -221,8 +260,9 @@ export default function AdminLayout() {
                   height: "34px",
                   flexShrink: 0,
                   borderRadius: "10px",
-                  border: "1px solid rgba(49,46,129,0.14)",
-                  background: "rgba(255,255,255,0.65)",
+                  border: "1px solid rgba(255, 255, 255, 0.85)",
+                  background: "rgba(255, 255, 255, 0.72)",
+                  boxShadow: "0 2px 8px rgba(11, 47, 91, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -256,8 +296,9 @@ export default function AdminLayout() {
                   height: "40px",
                   flexShrink: 0,
                   borderRadius: "12px",
-                  border: "1px solid rgba(49,46,129,0.14)",
-                  background: "rgba(255,255,255,0.72)",
+                  border: "1px solid rgba(255, 255, 255, 0.85)",
+                  background: "rgba(255, 255, 255, 0.72)",
+                  boxShadow: "0 2px 8px rgba(11, 47, 91, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -274,7 +315,12 @@ export default function AdminLayout() {
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "8px 10px", display: "flex", flexDirection: "column", gap: "2px", overflowY: "auto", scrollbarWidth: "none" }}>
+        <nav style={{
+          position: "relative", zIndex: 1,
+          flex: "0 1 auto", maxHeight: "calc(100vh - 280px)",
+          padding: "8px 10px", display: "flex", flexDirection: "column",
+          gap: "2px", overflowY: "auto", scrollbarWidth: "none", flexShrink: 0
+        }}>
           {NAV_ITEMS.map(item => (
             <NavLink
               key={item.to}
@@ -286,9 +332,12 @@ export default function AdminLayout() {
                 justifyContent: sidebarOpen ? "flex-start" : "center",
                 borderRadius: "10px", textDecoration: "none",
                 fontWeight: 700, fontSize: "13px", transition: "all 0.2s",
-                color: isActive ? "#312e81" : "rgba(49, 46, 129, 0.7)",
-                background: isActive ? "rgba(255,255,255,0.6)" : "transparent",
-                boxShadow: isActive ? "0 4px 12px rgba(99, 88, 220, 0.1)" : "none"
+                color: isActive ? "#312e81" : "rgba(49, 46, 129, 0.72)",
+                background: isActive ? "rgba(255, 255, 255, 0.75)" : "transparent",
+                backdropFilter: isActive ? "blur(10px)" : "none",
+                WebkitBackdropFilter: isActive ? "blur(10px)" : "none",
+                border: isActive ? "1px solid rgba(255, 255, 255, 0.85)" : "1px solid transparent",
+                boxShadow: isActive ? "0 4px 14px rgba(11, 47, 91, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9)" : "none"
               })}
             >
               {({ isActive }) => (
@@ -301,92 +350,299 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        {/* Bottom: user & logout */}
-        <div style={{
-          borderTop: "1px solid rgba(0,0,0,0.06)",
-          padding: sidebarOpen ? "16px 14px" : "16px 10px"
-        }}>
+        {/* Recruitment SVG Animation in the blank space below HR Reports and above HR Profile */}
+        {sidebarOpen && (
+          <div style={{
+            position: "relative", zIndex: 1,
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 2px",
+            minHeight: "160px",
+            maxHeight: "360px",
+            overflow: "hidden",
+            pointerEvents: "none",
+            margin: "6px 0"
+          }}>
+            <img
+              src="/SVG/Recruitment.svg"
+              alt="Recruitment Animation"
+              style={{
+                width: "100%",
+                height: "100%",
+                maxHeight: "340px",
+                objectFit: "contain",
+                display: "block",
+                filter: "drop-shadow(0 8px 20px rgba(11, 47, 91, 0.1))",
+                transform: "scale(1.24)",
+                transformOrigin: "center center"
+              }}
+            />
+          </div>
+        )}
 
-          {sidebarOpen && (
+        {/* Bottom: user & action buttons */}
+        <div style={{
+          position: "relative", zIndex: 1,
+          borderTop: "1px solid rgba(255, 255, 255, 0.65)",
+          boxShadow: "0 -1px 0 rgba(14, 165, 233, 0.04)",
+          padding: sidebarOpen ? "14px 10px 16px" : "14px 8px 18px",
+          marginTop: "auto"
+        }}>
+          {sidebarOpen ? (
+            /* Expanded: Avatar + (Name & Role) + (Home & Logout buttons on the right) */
             <div style={{
-              display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px"
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "100%"
             }}>
-              <div style={{
-                width: "34px", height: "34px", borderRadius: "50%",
-                background: "rgba(255,255,255,0.7)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#312e81", fontWeight: 700, fontSize: "13px", flexShrink: 0,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-              }}>
-                {adminId.charAt(0).toUpperCase()}
+              {/* Avatar */}
+              {sessionStorage.getItem("bnc_admin_avatar") ? (
+                <img
+                  src={sessionStorage.getItem("bnc_admin_avatar")}
+                  alt={adminId}
+                  style={{
+                    width: "34px", height: "34px", borderRadius: "50%",
+                    objectFit: "cover", flexShrink: 0,
+                    border: "2px solid rgba(255,255,255,0.85)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.12)"
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: "34px", height: "34px", borderRadius: "50%",
+                  background: "rgba(255,255,255,0.7)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#312e81", fontWeight: 700, fontSize: "13px", flexShrink: 0,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+                }}>
+                  {adminId.charAt(0).toUpperCase()}
+                </div>
+              )}
+
+              {/* Name & Role */}
+              <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                <div 
+                  title={adminId}
+                  style={{ 
+                    color: "#312e81", 
+                    fontSize: "12.5px", 
+                    fontWeight: 700, 
+                    overflow: "hidden", 
+                    textOverflow: "ellipsis", 
+                    whiteSpace: "nowrap",
+                    lineHeight: 1.25
+                  }}
+                >
+                  {adminId}
+                </div>
+                <div style={{ 
+                  color: "rgba(49, 46, 129, 0.6)", 
+                  fontSize: "11px", 
+                  fontWeight: 600,
+                  overflow: "hidden", 
+                  textOverflow: "ellipsis", 
+                  whiteSpace: "nowrap",
+                  lineHeight: 1.2
+                }}>
+                  {sessionStorage.getItem("bnc_admin_role") === "super_admin" ? "Super Admin" : "HR / Admin"}
+                </div>
               </div>
-              <div>
-                <div style={{ color: "#312e81", fontSize: "13px", fontWeight: 700 }}>{adminId}</div>
-                <div style={{ color: "rgba(49, 46, 129, 0.6)", fontSize: "11px", fontWeight: 600 }}>{sessionStorage.getItem("bnc_admin_role") === "super_admin" ? "Super Admin" : "HR / Admin"}</div>
+
+              {/* Action Buttons to the right of HR name */}
+              <div style={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
+                {/* Home Button */}
+                <button
+                  type="button"
+                  onClick={() => navigate("/")}
+                  title="Home Page"
+                  aria-label="Home Page"
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    flexShrink: 0,
+                    borderRadius: "8px",
+                    border: "1.5px solid rgba(99, 88, 220, 0.2)",
+                    background: "rgba(255,255,255,0.55)",
+                    color: "#312e81",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s",
+                    padding: 0
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "#e0e7ff";
+                    e.currentTarget.style.borderColor = "#c7d2fe";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.55)";
+                    e.currentTarget.style.borderColor = "rgba(99, 88, 220, 0.2)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                  </svg>
+                </button>
+
+                {/* Logout Button */}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Logout"
+                  aria-label="Logout"
+                  style={{
+                    width: "30px",
+                    height: "30px",
+                    flexShrink: 0,
+                    borderRadius: "8px",
+                    border: "1.5px solid rgba(99, 88, 220, 0.2)",
+                    background: "rgba(255,255,255,0.55)",
+                    color: "#3730a3",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s",
+                    padding: 0
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "#fee2e2";
+                    e.currentTarget.style.color = "#dc2626";
+                    e.currentTarget.style.borderColor = "#fecaca";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.55)";
+                    e.currentTarget.style.color = "#3730a3";
+                    e.currentTarget.style.borderColor = "rgba(99, 88, 220, 0.2)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                  </svg>
+                </button>
               </div>
             </div>
-          )}
-          <button
-            onClick={handleLogout}
-            style={{
-              width: "100%", border: "1.5px solid rgba(99, 88, 220, 0.2)",
-              borderRadius: "10px", padding: sidebarOpen ? "9px 14px" : "9px 0",
-              background: "rgba(255,255,255,0.5)", color: "#3730a3",
-              cursor: "pointer", fontSize: "13px", fontWeight: 700,
-              display: "flex", alignItems: "center",
-              justifyContent: sidebarOpen ? "flex-start" : "center", gap: "8px",
-              transition: "all 0.2s", fontFamily: "inherit",
-              marginBottom: "10px"
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "#fee2e2";
-              e.currentTarget.style.color = "#dc2626";
-              e.currentTarget.style.borderColor = "#fecaca";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.5)";
-              e.currentTarget.style.color = "#3730a3";
-              e.currentTarget.style.borderColor = "rgba(99, 88, 220, 0.2)";
-            }}
-          >
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-            </svg>
-            {sidebarOpen && "Logout"}
-          </button>
+          ) : (
+            /* Collapsed: Centered avatar + stacked compact buttons */
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+              {sessionStorage.getItem("bnc_admin_avatar") ? (
+                <img
+                  src={sessionStorage.getItem("bnc_admin_avatar")}
+                  alt={adminId}
+                  title={`${adminId} (${sessionStorage.getItem("bnc_admin_role") === "super_admin" ? "Super Admin" : "HR / Admin"})`}
+                  style={{
+                    width: "32px", height: "32px", borderRadius: "50%",
+                    objectFit: "cover", flexShrink: 0,
+                    border: "2px solid rgba(255,255,255,0.85)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.12)"
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div 
+                  title={`${adminId} (${sessionStorage.getItem("bnc_admin_role") === "super_admin" ? "Super Admin" : "HR / Admin"})`}
+                  style={{
+                    width: "32px", height: "32px", borderRadius: "50%",
+                    background: "rgba(255,255,255,0.7)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "#312e81", fontWeight: 700, fontSize: "12px", flexShrink: 0,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+                  }}
+                >
+                  {adminId.charAt(0).toUpperCase()}
+                </div>
+              )}
 
-          <button
-            onClick={() => navigate("/")}
-            style={{
-              width: "100%", border: "1.5px solid rgba(99, 88, 220, 0.2)",
-              borderRadius: "10px", padding: sidebarOpen ? "9px 14px" : "9px 0",
-              background: "rgba(255,255,255,0.5)", color: "#312e81",
-              cursor: "pointer", fontSize: "13px", fontWeight: 700,
-              display: "flex", alignItems: "center",
-              justifyContent: sidebarOpen ? "flex-start" : "center", gap: "8px",
-              transition: "all 0.2s", fontFamily: "inherit"
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "#e0e7ff";
-              e.currentTarget.style.borderColor = "#c7d2fe";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.5)";
-              e.currentTarget.style.borderColor = "rgba(99, 88, 220, 0.2)";
-            }}
-          >
-            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-            </svg>
-            {sidebarOpen && "Home Page"}
-          </button>
+              {/* Home & Logout stacked in collapsed sidebar */}
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                title="Home Page"
+                aria-label="Home Page"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  border: "1.5px solid rgba(99, 88, 220, 0.2)",
+                  background: "rgba(255,255,255,0.55)",
+                  color: "#312e81",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                  padding: 0
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "#e0e7ff";
+                  e.currentTarget.style.borderColor = "#c7d2fe";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.55)";
+                  e.currentTarget.style.borderColor = "rgba(99, 88, 220, 0.2)";
+                }}
+              >
+                <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Logout"
+                aria-label="Logout"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  border: "1.5px solid rgba(99, 88, 220, 0.2)",
+                  background: "rgba(255,255,255,0.55)",
+                  color: "#3730a3",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                  padding: 0
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "#fee2e2";
+                  e.currentTarget.style.color = "#dc2626";
+                  e.currentTarget.style.borderColor = "#fecaca";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.55)";
+                  e.currentTarget.style.color = "#3730a3";
+                  e.currentTarget.style.borderColor = "rgba(99, 88, 220, 0.2)";
+                }}
+              >
+                <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
       </aside>
 
       {/* Main Content */}
       <main style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
-        <Outlet />
+        <Outlet context={{ sidebarOpen, setSidebarOpen }} />
       </main>
     </div>
   );

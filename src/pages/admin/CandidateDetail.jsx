@@ -6,7 +6,7 @@ import {
   FiBookOpen, FiTag, FiAlignLeft, FiCalendar, FiExternalLink,
   FiEdit3, FiSave, FiX, FiAward, FiClock, FiCheckCircle,
   FiLoader, FiDatabase, FiFileText, FiActivity, FiClipboard, FiPhoneCall, FiMessageSquare,
-  FiCheckSquare, FiSquare, FiCheck
+  FiCheckSquare, FiSquare, FiCheck, FiLayers, FiChevronDown, FiChevronUp, FiSend, FiAlertCircle
 } from 'react-icons/fi';
 
 // ── Helpers ──
@@ -39,6 +39,7 @@ const TABS = [
   { key: 'test', label: 'Employment Test Results', icon: <FiFileText size={14} /> },
   { key: 'activity', label: 'Activities', icon: <FiActivity size={14} /> },
   { key: 'communication', label: 'Comm. History', icon: <FiPhoneCall size={14} /> },
+  { key: 'pipeline', label: 'Job Applications & Pipeline', icon: <FiLayers size={14} /> },
 ];
 
 const STATUS_OPTIONS = ['Applied', 'In Database', 'Tagged', 'Rejected', 'Interview Scheduled', 'Hired', 'On Hold'];
@@ -170,12 +171,56 @@ export default function CandidateDetail() {
     setTempRead(true); setTempSpeak(true); setTempWrite(true);
   };
 
+  const [jobPipelines, setJobPipelines] = useState([]);
+  const [loadingPipelines, setLoadingPipelines] = useState(false);
+  const [expandedPipelineJobs, setExpandedPipelineJobs] = useState({});
+
+  const toggleExpandJob = (jobKey) => {
+    setExpandedPipelineJobs(prev => ({
+      ...prev,
+      [jobKey]: !prev[jobKey]
+    }));
+  };
+
+  const loadJobPipelines = async (applicantId) => {
+    if (!applicantId) return;
+    setLoadingPipelines(true);
+    try {
+      const data = await jobService.getApplicantJobPipelines(applicantId);
+      setJobPipelines(data || []);
+      // Expand all by default so user can immediately see details
+      const initialExpanded = {};
+      (data || []).forEach(j => {
+        initialExpanded[j.jobCode || j.id] = true;
+      });
+      setExpandedPipelineJobs(initialExpanded);
+    } catch(e) {
+      console.error('Error loading applicant pipelines:', e);
+      setJobPipelines([]);
+    }
+    setLoadingPipelines(false);
+  };
+
   const loadLogs = async (applicantId) => {
     setLoadingLogs(true);
     try {
       const res = await jobService.getCommunicationLogs(applicantId);
       if (res.success) {
-        setLogs(res.data || []);
+        // Only keep genuine direct recruiter-to-candidate communications (manual calls, emails, WhatsApp)
+        const clean = (res.data || []).filter(l => {
+          if (l.communication_type === 'Pipeline Update') return false;
+          const notes = l.notes || '';
+          if (
+            notes.startsWith('[Client Submission') ||
+            notes.startsWith('[Manager Submit') ||
+            notes.startsWith('[Manager Submission') ||
+            notes.startsWith('[Stage:')
+          ) {
+            return false;
+          }
+          return true;
+        });
+        setLogs(clean);
       } else {
         setLogs([]);
       }
@@ -204,6 +249,7 @@ export default function CandidateDetail() {
         const viewer = sessionStorage.getItem('bnc_admin_name') || sessionStorage.getItem('bnc_admin_id') || sessionStorage.getItem('loginId') || 'Recruiter/Admin';
         jobService.updateLastViewedBy(id, viewer);
         loadLogs(c.applicantId);
+        loadJobPipelines(c.applicantId);
       } else {
         setError('Applicant not found.');
       }
@@ -283,6 +329,7 @@ export default function CandidateDetail() {
       setForm(prev => ({ ...prev, status: 'Tagged' }));
       setShowShortlistModal(false);
       setSaveMsg('Candidate Tagged!');
+      loadJobPipelines(candidate.applicantId);
       setTimeout(() => setSaveMsg(''), 4000);
     } else {
       setSaveMsg('Error: ' + (result.error || 'Failed to shortlist'));
@@ -583,6 +630,114 @@ export default function CandidateDetail() {
   // ── Snapshot Tab ──
   const SnapshotContent = () => (
     <div>
+      {/* Job Applications Overview in Snapshot */}
+      {jobPipelines && jobPipelines.length > 0 && (
+        <div style={{
+          background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0',
+          padding: '18px 22px', marginBottom: '18px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '30px', height: '30px', borderRadius: '8px',
+                background: '#eff6ff', color: '#1e40af',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <FiLayers size={15} />
+              </div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
+                  Job Pipeline Applications ({jobPipelines.length})
+                </h4>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
+                  Assigned client jobs & current recruitment stage
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setTab('pipeline')}
+              style={{
+                background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af',
+                fontSize: '11px', fontWeight: 700, cursor: 'pointer', padding: '5px 12px',
+                borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '5px'
+              }}
+            >
+              View Full Pipeline Journey →
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+            {jobPipelines.map((j, idx) => {
+              const stage = j.currentStage || 'Pipeline';
+              const isHired = stage === 'Hired';
+              const isRejected = stage === 'Client Rejected';
+              const isOnHold = stage === 'On Hold';
+              
+              const badgeBg = isHired ? '#ecfdf5' : isRejected ? '#fef2f2' : isOnHold ? '#fffbeb' : '#eff6ff';
+              const badgeText = isHired ? '#059669' : isRejected ? '#dc2626' : isOnHold ? '#d97706' : '#2563eb';
+              const badgeBorder = isHired ? '#a7f3d0' : isRejected ? '#fecaca' : isOnHold ? '#fde68a' : '#bfdbfe';
+
+              return (
+                <div
+                  key={j.id || idx}
+                  onClick={() => setTab('pipeline')}
+                  style={{
+                    padding: '14px 16px', background: '#fafafa', borderRadius: '10px',
+                    border: '1px solid #e2e8f0', borderLeft: '4px solid #0B2F5B',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '8px',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = '#fff';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(11,47,91,0.08)';
+                    e.currentTarget.style.borderColor = '#0B2F5B';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div>
+                      <span style={{
+                        background: '#0B2F5B', color: '#fff', fontSize: '10px', fontWeight: 800,
+                        padding: '2px 7px', borderRadius: '4px', letterSpacing: '0.4px', display: 'inline-block'
+                      }}>
+                        {j.jobCode || 'JPC-???'}
+                      </span>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', marginTop: '4px' }}>
+                        {j.jobRole || 'Role N/A'}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FiBriefcase size={11} color="#94a3b8" /> {j.company || 'Company N/A'}
+                      </div>
+                    </div>
+
+                    <span style={{
+                      padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 700,
+                      background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`,
+                      display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap'
+                    }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeText }} />
+                      {stage}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    paddingTop: '6px', borderTop: '1px dashed #e2e8f0', display: 'flex',
+                    justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#64748b'
+                  }}>
+                    <span>Tagged: <strong>{fmtDate(j.date)}</strong></span>
+                    <span style={{ color: '#0B2F5B', fontWeight: 700 }}>Inspect Journey →</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Notes / AI Analysis */}
       {candidate.aiAnalysis && (
@@ -896,6 +1051,335 @@ export default function CandidateDetail() {
     );
   };
 
+  // ── Job Applications & Pipeline Tab ──
+  const PipelineJourneyContent = () => {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {loadingPipelines ? (
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#64748b' }}>
+            <FiLoader size={24} style={{ animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : (!jobPipelines || jobPipelines.length === 0) ? (
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '48px 24px', textAlign: 'center', color: '#94a3b8' }}>
+            <FiBriefcase size={36} style={{ marginBottom: '12px', opacity: 0.5 }} />
+            <div style={{ fontSize: '15px', fontWeight: 700, color: '#334155' }}>No Job Submissions Yet</div>
+            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>This candidate has not yet been tagged to any client job role (JPC).</div>
+            <button
+              onClick={() => setShowShortlistModal(true)}
+              style={{
+                marginTop: '16px', padding: '8px 18px', background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe',
+                borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer'
+              }}
+            >
+              Tag Candidate to a Job
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {jobPipelines.map((job, idx) => {
+              const isExpanded = expandedPipelineJobs[job.jobCode || job.id] !== false;
+              const stage = job.currentStage || 'Pipeline';
+              
+              const getStageBadge = (st) => {
+                if (st === 'Hired') return { bg: '#ecfdf5', text: '#059669', border: '#a7f3d0' };
+                if (st === 'Client Rejected') return { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' };
+                if (st === 'On Hold') return { bg: '#fffbeb', text: '#d97706', border: '#fde68a' };
+                if (st === 'Client Cleared') return { bg: '#f0fdfa', text: '#0d9488', border: '#99f6e4' };
+                if (st && st.includes('Round')) return { bg: '#eff6ff', text: '#2563eb', border: '#bfdbfe' };
+                if (st === 'Client Submission') return { bg: '#ecfeff', text: '#0891b2', border: '#a5f3fc' };
+                if (st === 'Manager Submission') return { bg: '#f5f3ff', text: '#7c3aed', border: '#ddd6fe' };
+                return { bg: '#f8fafc', text: '#475569', border: '#e2e8f0' };
+              };
+
+              const badgeStyle = getStageBadge(stage);
+              const history = Array.isArray(job.interviewHistory) ? job.interviewHistory : [];
+
+              return (
+                <div key={job.id || job.jobCode || idx} style={{
+                  background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)', transition: 'box-shadow 0.2s'
+                }}>
+                  {/* Job Header Card */}
+                  <div
+                    onClick={() => toggleExpandJob(job.jobCode || job.id)}
+                    style={{
+                      padding: '18px 22px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
+                      alignItems: 'center', background: isExpanded ? '#fafafa' : '#fff',
+                      borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none',
+                      transition: 'background 0.15s', gap: '16px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
+                      {/* Left Job Code Box */}
+                      <div style={{
+                        background: 'linear-gradient(135deg, #0B2F5B 0%, #1e40af 100%)',
+                        color: '#fff', padding: '8px 14px', borderRadius: '10px',
+                        boxShadow: '0 2px 6px rgba(11, 47, 91, 0.2)', textAlign: 'center',
+                        flexShrink: 0
+                      }}>
+                        <div style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '0.5px' }}>
+                          {job.jobCode || 'JPC-???'}
+                        </div>
+                      </div>
+
+                      {/* Job Title, Company & Tagged Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
+                            {job.jobRole || 'Job Role N/A'}
+                          </h4>
+                          {job.company && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              background: '#f1f5f9', color: '#475569', padding: '2px 8px',
+                              borderRadius: '6px', fontSize: '11px', fontWeight: 600, border: '1px solid #e2e8f0'
+                            }}>
+                              <FiBriefcase size={11} color="#64748b" /> {job.company}
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px', flexWrap: 'wrap', fontSize: '12px', color: '#64748b' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <FiCalendar size={12} color="#94a3b8" /> Tagged: <strong style={{ color: '#334155' }}>{fmtDate(job.date)}</strong>
+                          </span>
+                          <span style={{ color: '#cbd5e1' }}>•</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <FiUser size={12} color="#94a3b8" /> By: <strong style={{ color: '#334155' }}>{job.shortlistedBy || 'Recruiter'}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Stage Badge & Chevron */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                      <span style={{
+                        padding: '5px 14px', borderRadius: '24px', fontSize: '12px', fontWeight: 700,
+                        background: badgeStyle.bg, color: badgeStyle.text, border: `1px solid ${badgeStyle.border}`,
+                        display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                      }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: badgeStyle.text }} />
+                        {stage}
+                      </span>
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '8px',
+                        background: isExpanded ? '#f1f5f9' : '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#64748b', border: '1px solid #e2e8f0'
+                      }}>
+                        {isExpanded ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded Timeline Journey */}
+                  {isExpanded && (
+                    <div style={{ padding: '20px 24px', background: '#fff' }}>
+                      {/* Top Action Bar */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '14px', borderBottom: '1px dashed #e2e8f0', flexWrap: 'wrap', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <span><strong>Manager Submit:</strong> {job.managerSubmittedAt ? <span style={{ color: '#059669', fontWeight: 700 }}>✓ Submitted ({fmtDate(job.managerSubmittedAt)})</span> : <span style={{ color: '#94a3b8' }}>Pending</span>}</span>
+                          <span style={{ color: '#cbd5e1' }}>•</span>
+                          <span><strong>Client Submit:</strong> {job.clientSubmittedAt ? <span style={{ color: '#059669', fontWeight: 700 }}>✓ Submitted ({fmtDate(job.clientSubmittedAt)})</span> : <span style={{ color: '#94a3b8' }}>Pending</span>}</span>
+                        </div>
+                        {job.jobCode && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); nav(`/admin/client-jobs/${job.jobCode}`); }}
+                            style={{
+                              padding: '5px 12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px',
+                              color: '#1e40af', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'
+                            }}
+                          >
+                            <FiExternalLink size={11} /> Open Job Pipeline ({job.jobCode})
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Milestones Stepper */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                        {/* 1. Tagging Milestone */}
+                        <div style={{ display: 'flex', gap: '14px', position: 'relative' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{
+                              width: '28px', height: '28px', borderRadius: '50%', background: '#e0f2fe', color: '#0369a1',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, border: '2px solid #bae6fd'
+                            }}>
+                              <FiTag size={12} />
+                            </div>
+                            <div style={{ width: '2px', flex: 1, background: '#e2e8f0', minHeight: '28px' }} />
+                          </div>
+                          <div style={{ paddingBottom: '20px', flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                              <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>
+                                Candidate Tagged & Shortlisted
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#94a3b8' }}>{fmtDate(job.date)}</div>
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                              Tagged for role by <strong>{job.shortlistedBy || 'Recruiter'}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. Manager Submission Milestone */}
+                        <div style={{ display: 'flex', gap: '14px', position: 'relative' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{
+                              width: '28px', height: '28px', borderRadius: '50%',
+                              background: job.managerSubmittedAt ? '#f5f3ff' : '#f8fafc',
+                              color: job.managerSubmittedAt ? '#7c3aed' : '#94a3b8',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
+                              border: job.managerSubmittedAt ? '2px solid #ddd6fe' : '2px solid #e2e8f0'
+                            }}>
+                              {job.managerSubmittedAt ? <FiCheckCircle size={12} /> : <FiClock size={12} />}
+                            </div>
+                            <div style={{ width: '2px', flex: 1, background: '#e2e8f0', minHeight: '28px' }} />
+                          </div>
+                          <div style={{ paddingBottom: '20px', flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                              <div style={{ fontSize: '13px', fontWeight: 800, color: job.managerSubmittedAt ? '#1e293b' : '#64748b' }}>
+                                Hiring Manager Submission
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                {job.managerSubmittedAt ? fmtDate(job.managerSubmittedAt) : 'Pending Review'}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                              {job.managerSubmittedAt ? 'Profile submitted to hiring manager for internal review' : 'Not yet submitted to hiring manager'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 3. Client Submission Milestone */}
+                        <div style={{ display: 'flex', gap: '14px', position: 'relative' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{
+                              width: '28px', height: '28px', borderRadius: '50%',
+                              background: job.clientSubmittedAt ? '#ecfeff' : '#f8fafc',
+                              color: job.clientSubmittedAt ? '#0891b2' : '#94a3b8',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1,
+                              border: job.clientSubmittedAt ? '2px solid #a5f3fc' : '2px solid #e2e8f0'
+                            }}>
+                              {job.clientSubmittedAt ? <FiSend size={12} /> : <FiClock size={12} />}
+                            </div>
+                            {(history.length > 0 || (job.currentStage && job.currentStage !== 'Pipeline' && job.currentStage !== 'Manager Submission' && job.currentStage !== 'Client Submission')) && (
+                              <div style={{ width: '2px', flex: 1, background: '#e2e8f0', minHeight: '28px' }} />
+                            )}
+                          </div>
+                          <div style={{ paddingBottom: '20px', flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                              <div style={{ fontSize: '13px', fontWeight: 800, color: job.clientSubmittedAt ? '#1e293b' : '#64748b' }}>
+                                Client Submission ({job.company || 'Client'})
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                {job.clientSubmittedAt ? fmtDate(job.clientSubmittedAt) : 'Pending Client Submission'}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                              {job.clientSubmittedAt ? 'Candidate profile officially submitted to client' : 'Pending submission to client'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 4. Interview Rounds & Stage Decisions from history */}
+                        {history.length > 0 ? (
+                          history.map((h, hIdx) => {
+                            const isLast = hIdx === history.length - 1;
+                            const hStage = h.stage || h.currentStage || 'Pipeline Stage';
+                            const bStyle = getStageBadge(hStage);
+                            const notes = h.notes || '';
+                            const reason = h.rejection_reason || h.rejectionReason || '';
+                            const sched = h.scheduled_at || h.scheduledAt || '';
+                            const updatedBy = h.updated_by || h.updatedBy || 'HR';
+                            const updatedAt = h.updated_at || h.updatedAt || '';
+
+                            return (
+                              <div key={hIdx} style={{ display: 'flex', gap: '14px', position: 'relative' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                  <div style={{
+                                    width: '28px', height: '28px', borderRadius: '50%', background: bStyle.bg, color: bStyle.text,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, border: `2px solid ${bStyle.border}`
+                                  }}>
+                                    {hStage === 'Hired' ? <FiAward size={13} /> : hStage === 'Client Rejected' ? <FiX size={13} /> : <FiClock size={12} />}
+                                  </div>
+                                  {!isLast && <div style={{ width: '2px', flex: 1, background: '#e2e8f0', minHeight: '28px' }} />}
+                                </div>
+                                <div style={{ paddingBottom: '20px', flex: 1 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>{hStage}</span>
+                                      <span style={{ fontSize: '11px', color: '#64748b' }}>by <strong>{updatedBy}</strong></span>
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                      {updatedAt ? `${fmtDate(updatedAt)} (${cvAge(updatedAt)})` : 'Logged'}
+                                    </div>
+                                  </div>
+
+                                  {sched && (
+                                    <div style={{ marginTop: '6px', fontSize: '12px', color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                      <FiCalendar size={12} /> Scheduled: {sched}
+                                    </div>
+                                  )}
+
+                                  {notes && (
+                                    <div style={{
+                                      marginTop: '8px', padding: '10px 14px', background: '#f8fafc', borderRadius: '8px',
+                                      border: '1px solid #f1f5f9', fontSize: '12px', color: '#334155', lineHeight: 1.5
+                                    }}>
+                                      {notes}
+                                    </div>
+                                  )}
+
+                                  {reason && (
+                                    <div style={{
+                                      marginTop: '8px', padding: '10px 14px', background: '#fef2f2', borderRadius: '8px',
+                                      border: '1px solid #fecaca', fontSize: '12px', color: '#b91c1c', lineHeight: 1.5
+                                    }}>
+                                      <strong>Rejection Reason:</strong> {reason}
+                                      <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '2px' }}>
+                                        * Note: Rejection is scoped to this job role only. Candidate remains eligible for other jobs.
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          // If no history array yet but stage is beyond client submission
+                          job.currentStage && job.currentStage !== 'Pipeline' && job.currentStage !== 'Client Submission' && job.currentStage !== 'Manager Submission' && (
+                            <div style={{ display: 'flex', gap: '14px', position: 'relative' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{
+                                  width: '28px', height: '28px', borderRadius: '50%', background: badgeStyle.bg, color: badgeStyle.text,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, border: `2px solid ${badgeStyle.border}`
+                                }}>
+                                  <FiCheckCircle size={12} />
+                                </div>
+                              </div>
+                              <div style={{ flex: 1, paddingBottom: '8px' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>Current Status: {job.currentStage}</div>
+                                {job.rejectionReason && (
+                                  <div style={{ marginTop: '6px', padding: '8px 12px', background: '#fef2f2', borderRadius: '8px', color: '#b91c1c', fontSize: '12px' }}>
+                                    <strong>Reason:</strong> {job.rejectionReason}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const tabContent = {
     snapshot: SnapshotContent,
     personal: PersonalContent,
@@ -904,6 +1388,7 @@ export default function CandidateDetail() {
     test: TestResultsContent,
     activity: ActivitiesContent,
     communication: CommunicationContent,
+    pipeline: PipelineJourneyContent,
   };
 
   const ActiveTabComponent = tabContent[tab];
@@ -938,7 +1423,7 @@ export default function CandidateDetail() {
               key={t.key}
               onClick={() => setTab(t.key)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '4px',
+                display: 'flex', alignItems: 'center', gap: '5px',
                 padding: '12px 10px', background: 'none', border: 'none',
                 borderBottom: tab === t.key ? '2px solid #0B2F5B' : '2px solid transparent',
                 color: tab === t.key ? '#0B2F5B' : '#94a3b8',
@@ -947,6 +1432,15 @@ export default function CandidateDetail() {
               }}
             >
               {t.icon} {t.label}
+              {t.key === 'pipeline' && jobPipelines && jobPipelines.length > 0 && (
+                <span style={{
+                  background: tab === 'pipeline' ? '#0B2F5B' : '#e2e8f0',
+                  color: tab === 'pipeline' ? '#fff' : '#475569',
+                  borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, marginLeft: '2px'
+                }}>
+                  {jobPipelines.length}
+                </span>
+              )}
             </button>
           ))}
         </div>

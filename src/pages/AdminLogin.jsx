@@ -26,6 +26,11 @@ export default function AdminLogin() {
         sessionStorage.setItem("bnc_admin_email", result.loginId || loginId);
         sessionStorage.setItem("bnc_admin_name", result.hrName || result.loginId || loginId);
         sessionStorage.setItem("bnc_admin_role", result.role || "hr");
+        if (result.avatarUrl) {
+          sessionStorage.setItem("bnc_admin_avatar", result.avatarUrl);
+        } else {
+          sessionStorage.removeItem("bnc_admin_avatar");
+        }
         navigate("/admin");
       } else {
         setError(result.error || "Invalid Login ID or Password. Please try again.");

@@ -24,7 +24,7 @@ export default function AdminRoute({ children }) {
         }
 
         const { data } = await supabase.from('admin_users')
-          .select('hr_name, role, email')
+          .select('hr_name, role, email, avatar_url')
           .eq('auth_id', session.user.id)
           .eq('is_active', true)
           .maybeSingle();
@@ -37,10 +37,16 @@ export default function AdminRoute({ children }) {
           sessionStorage.setItem("bnc_admin_name", data.hr_name || data.email);
           sessionStorage.setItem("bnc_admin_id", data.email);
           sessionStorage.setItem("bnc_admin_email", data.email || session.user.email || "");
+          if (data.avatar_url) {
+            sessionStorage.setItem("bnc_admin_avatar", data.avatar_url);
+          } else {
+            sessionStorage.removeItem("bnc_admin_avatar");
+          }
           setIsAuth(true);
         } else {
           sessionStorage.removeItem("bnc_admin_auth");
           sessionStorage.removeItem("bnc_admin_email");
+          sessionStorage.removeItem("bnc_admin_avatar");
           setIsAuth(false);
         }
       } finally {
